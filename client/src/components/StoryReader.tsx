@@ -250,15 +250,34 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
             <h2 className="text-xl font-bold text-neutral-900 mb-3">
               {currentChapter.title}
             </h2>
+
+            {currentChapter.summary && (
+              <div className="mb-4 p-3 bg-gray-50 border-l-4 border-primary/30 rounded font-medium text-sm text-gray-700">
+                <h3 className="font-bold text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  Zusammenfassung der bisherigen Geschichte:
+                </h3>
+                <p>{currentChapter.summary}</p>
+              </div>
+            )}
+
             <div
               className="font-serif text-neutral-900 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: currentChapter.content }}
             />
+            
+            {currentChapter.isEnding && (
+              <div className="mt-6 p-4 bg-primary/10 rounded-lg border border-primary/20 text-center">
+                <h3 className="font-bold text-lg mb-2 text-primary">Ende der Geschichte</h3>
+                <p className="text-gray-700">
+                  Diese Geschichte ist zu Ende. Du kannst zurück gehen und einen anderen Pfad erkunden.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Chapter Continuation Options */}
-        {currentChapter.continuationOptions && (
+        {/* Chapter Continuation Options - nur zeigen, wenn kein Ende */}
+        {currentChapter.continuationOptions && !currentChapter.isEnding && (
           <ContinuationOptions
             options={currentChapter.continuationOptions}
             selectedOptionId={selectedOptionId}

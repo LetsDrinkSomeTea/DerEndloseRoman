@@ -131,8 +131,10 @@ export class MemStorage implements IStorage {
       parentId: chapterData.parentId || null,
       title: chapterData.title,
       content: chapterData.content,
+      summary: chapterData.summary || null,
       prompt: chapterData.prompt || null,
       isRoot: chapterData.isRoot || null,
+      isEnding: chapterData.isEnding || 0,
       path: pathString,
       createdAt: new Date()
     };

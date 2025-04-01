@@ -19,6 +19,8 @@ export interface StoryDetails {
 export interface ChapterGeneration {
   title: string;
   content: string;
+  summary: string;
+  isEnding: boolean;
   continuationOptions: {
     title: string;
     preview: string;
@@ -29,15 +31,27 @@ export interface ChapterGeneration {
 /**
  * Generate a chapter based on story details or continuation options
  */
+/**
+ * Lädt die Zeichen und den bisherigen Pfad eines Kapitels zur Verwendung in der Prompt
+ */
+export interface ChapterContext {
+  content: string;
+  title: string;
+  summary?: string | null;
+  parentId?: number | null;
+  characters?: any[]; // Verwende any[], um Typkonflikte zu vermeiden
+  previousSummary?: string | null;
+}
+
 export async function generateChapter(
   details: StoryDetails,
-  previousChapter?: { content: string; title: string },
+  chapterContext?: ChapterContext,
   customPrompt?: string,
 ): Promise<ChapterGeneration> {
   // Building the base prompt
   let prompt = `Generiere ein Kapitel für eine deutsche Geschichte mit folgenden Details:\n`;
 
-  if (details.title) prompt += `Titel: ${details.title}\n`;
+  if (details.title) prompt += `Titel der Geschichte: ${details.title}\n`;
   if (details.genre) prompt += `Genre: ${details.genre}\n`;
   if (details.narrativeStyle)
     prompt += `Erzählstil: ${details.narrativeStyle}\n`;
@@ -47,20 +61,43 @@ export async function generateChapter(
   if (details.mainCharacter)
     prompt += `Hauptcharakter: ${details.mainCharacter}\n`;
 
-  if (previousChapter) {
-    prompt += `\nVorheriges Kapitel Titel: ${previousChapter.title}\n`;
-    prompt += `Vorheriges Kapitel Inhalt: ${previousChapter.content}\n`;
+  // Füge Charakterinformationen hinzu, wenn verfügbar
+  if (chapterContext?.characters && chapterContext.characters.length > 0) {
+    prompt += `\nCharaktere in der Geschichte:\n`;
+    chapterContext.characters.forEach((character, index) => {
+      prompt += `Character ${index + 1}: ${character.name}`;
+      if (character.age) prompt += `, ${character.age} Jahre alt`;
+      if (character.personality) prompt += `, Persönlichkeit: ${character.personality}`;
+      if (character.background) prompt += `, Hintergrund: ${character.background}`;
+      prompt += `\n`;
+    });
+  }
+
+  // Vorheriges Kapitel und Zusammenfassung
+  if (chapterContext) {
+    prompt += `\nVorheriges Kapitel Titel: ${chapterContext.title}\n`;
+    prompt += `Vorheriges Kapitel Inhalt: ${chapterContext.content}\n`;
+    
+    if (chapterContext.previousSummary) {
+      prompt += `\nZusammenfassung der bisherigen Geschichte: ${chapterContext.previousSummary}\n`;
+    }
   }
 
   if (customPrompt) {
     prompt += `\nBitte berücksichtige folgende Anweisung für das neue Kapitel: ${customPrompt}\n`;
   }
 
-  prompt += `\nDas Kapitel sollte 100-150 Wörter umfassen. Generiere auch 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.`;
+  prompt += `\nDas Kapitel sollte 100-150 Wörter umfassen.`;
+  prompt += `\nDu kannst selbst entscheiden, ob dieses Kapitel ein Geschichtsende sein soll. Wenn du dich für ein Ende entscheidest, setze "isEnding" auf true und generiere keine Fortsetzungsoptionen.`;
+  prompt += `\nWenn es kein Ende ist, generiere 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.`;
+  prompt += `\nErzähle die Geschichte ansprechend und berücksichtige alle Charaktere und die Zusammenfassung.`;
+  
   prompt += `\nFormat: Antworte bitte mit einem JSON Objekt im folgenden Format:
   {
     "title": "Kapiteltitel",
     "content": "Der Kapitelinhalt (100-150 Wörter)",
+    "summary": "Eine Zusammenfassung der gesamten Geschichte bis zu diesem Punkt (60-80 Wörter)",
+    "isEnding": false,
     "continuationOptions": [
       {
         "title": "Titel der ersten Option",
@@ -78,6 +115,15 @@ export async function generateChapter(
         "prompt": "Detaillierter Prompt für diese Fortsetzung"
       }
     ]
+  }
+  
+  Falls du entscheidest, dass dies das Ende der Geschichte sein soll:
+  {
+    "title": "Kapiteltitel",
+    "content": "Der Kapitelinhalt, der die Geschichte zu einem befriedigenden Abschluss bringt (100-150 Wörter)",
+    "summary": "Eine abschließende Zusammenfassung der gesamten Geschichte (60-80 Wörter)",
+    "isEnding": true,
+    "continuationOptions": []
   }`;
 
   try {
@@ -111,9 +157,9 @@ export async function generateChapter(
 
 export interface CharacterCreation {
   name: string;
-  age?: string;
-  personality?: string;
-  background?: string;
+  age?: string | null;
+  personality?: string | null;
+  background?: string | null;
 }
 
 export interface StoryDetailsWithCharacters extends StoryDetails {

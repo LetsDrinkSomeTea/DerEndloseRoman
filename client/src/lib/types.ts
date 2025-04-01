@@ -16,8 +16,10 @@ export interface Chapter {
   parentId?: number | null;
   title: string;
   content: string;
+  summary?: string;
   prompt?: string;
   isRoot?: number;
+  isEnding?: boolean;
   path?: string;
   createdAt?: Date;
   continuationOptions?: ContinuationOption[];

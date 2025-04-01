@@ -223,12 +223,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mainCharacter: story.mainCharacter
       };
       
-      const previousChapterData = {
+      // Lade alle Charaktere der Geschichte
+      const charactersData = await storage.getCharacters(storyId);
+      
+      // Konvertiere Character zu CharacterCreation, um Typprobleme zu vermeiden
+      const characters = charactersData.map(char => ({
+        name: char.name,
+        age: char.age,
+        personality: char.personality,
+        background: char.background
+      }));
+      
+      // Erstelle den Kapitelkontext mit Zusammenfassung und Charakteren
+      const chapterContext = {
         title: currentChapter.title,
-        content: currentChapter.content
+        content: currentChapter.content,
+        summary: currentChapter.summary || undefined,
+        parentId: currentChapter.parentId,
+        characters: characters,
+        previousSummary: currentChapter.summary || undefined
       };
       
-      const chapterData = await generateChapter(storyDetails, previousChapterData, prompt);
+      const chapterData = await generateChapter(storyDetails, chapterContext, prompt);
       
       // Create the new chapter
       const newChapter = await storage.createChapter({
@@ -236,18 +252,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parentId: chapterId,
         title: chapterData.title,
         content: chapterData.content,
+        summary: chapterData.summary || undefined,
         prompt: prompt || undefined,
-        isRoot: 0
+        isRoot: 0,
+        isEnding: chapterData.isEnding ? 1 : 0
       });
       
-      // Create continuation options
-      for (const option of chapterData.continuationOptions) {
-        await storage.createContinuationOption({
-          chapterId: newChapter.id,
-          title: option.title,
-          preview: option.preview,
-          prompt: option.prompt
-        });
+      // Nur Fortsetzungsoptionen erstellen, wenn das Kapitel kein Ende ist
+      if (!chapterData.isEnding) {
+        // Create continuation options
+        for (const option of chapterData.continuationOptions) {
+          await storage.createContinuationOption({
+            chapterId: newChapter.id,
+            title: option.title,
+            preview: option.preview,
+            prompt: option.prompt
+          });
+        }
       }
       
       // Return the new chapter with its continuation options

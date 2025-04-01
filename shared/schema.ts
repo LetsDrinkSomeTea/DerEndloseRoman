@@ -30,8 +30,10 @@ export const chapters = pgTable("chapters", {
   parentId: integer("parent_id"),
   title: text("title").notNull(),
   content: text("content").notNull(),
+  summary: text("summary"),
   prompt: text("prompt"),
   isRoot: integer("is_root").default(0),
+  isEnding: integer("is_ending").default(0),
   path: text("path"),
   createdAt: timestamp("created_at").defaultNow(),
 });
