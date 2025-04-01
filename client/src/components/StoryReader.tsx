@@ -15,9 +15,9 @@ interface StoryReaderProps {
 export default function StoryReader({ story, onBack }: StoryReaderProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(
-    story.rootChapter || null
+    story.rootChapter || null,
   );
   const [chapterPath, setChapterPath] = useState<Chapter[]>([]);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
@@ -40,9 +40,17 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
   });
 
   useEffect(() => {
-    if (pathData && currentChapter && currentChapter.id !== story.rootChapter?.id) {
+    if (
+      pathData &&
+      currentChapter &&
+      currentChapter.id !== story.rootChapter?.id
+    ) {
       // Remove the root chapter from the path
-      setChapterPath(pathData.filter((chapter: Chapter) => chapter.id !== story.rootChapter?.id));
+      setChapterPath(
+        pathData.filter(
+          (chapter: Chapter) => chapter.id !== story.rootChapter?.id,
+        ),
+      );
     } else {
       setChapterPath([]);
     }
@@ -59,12 +67,18 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
         ...(customPrompt ? { customPrompt } : {}),
       };
 
-      const response = await apiRequest("POST", "/api/stories/continue", payload);
+      const response = await apiRequest(
+        "POST",
+        "/api/stories/continue",
+        payload,
+      );
       return response.json();
     },
     onSuccess: (data) => {
       if (data) {
-        queryClient.invalidateQueries({ queryKey: ["/api/chapters", data.id, "path"] });
+        queryClient.invalidateQueries({
+          queryKey: ["/api/chapters", data.id, "path"],
+        });
         setCurrentChapter(data);
         setSelectedOptionId(null);
         setCustomPrompt("");
@@ -73,7 +87,8 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
     onError: () => {
       toast({
         title: "Fehler",
-        description: "Die Geschichte konnte nicht fortgesetzt werden. Bitte versuche es erneut.",
+        description:
+          "Die Geschichte konnte nicht fortgesetzt werden. Bitte versuche es erneut.",
         variant: "destructive",
       });
     },
@@ -103,7 +118,8 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
   const handleGoBack = () => {
     if (chapterPath.length > 0) {
       // Go to previous chapter
-      const previousChapter = chapterPath[chapterPath.length - 1] || story.rootChapter;
+      const previousChapter =
+        chapterPath[chapterPath.length - 1] || story.rootChapter;
       if (previousChapter) {
         setCurrentChapter(previousChapter);
         setSelectedOptionId(null);
@@ -141,7 +157,9 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
           <CardContent className="p-0">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-neutral-900">{story.title}</h1>
+                <h1 className="text-2xl font-bold text-neutral-900">
+                  {story.title}
+                </h1>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {story.genre && (
                     <span className="text-sm bg-neutral-100 text-neutral-700 rounded-full px-3 py-1">
@@ -155,13 +173,15 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
                   )}
                 </div>
               </div>
-              <span className="bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-md text-sm font-medium">
+              <span className="bg-primary bg-opacity-10 text-white px-3 py-1 rounded-md text-sm font-medium">
                 Kapitel {chapterDepth}
               </span>
             </div>
 
-            <h2 className="text-xl font-bold text-neutral-900 mb-3">{currentChapter.title}</h2>
-            <div 
+            <h2 className="text-xl font-bold text-neutral-900 mb-3">
+              {currentChapter.title}
+            </h2>
+            <div
               className="font-serif text-neutral-900 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: currentChapter.content }}
             />

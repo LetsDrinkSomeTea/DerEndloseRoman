@@ -1,11 +1,18 @@
-import { pgTable, text, serial, integer, varchar, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  varchar,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Story model
 export const stories = pgTable("stories", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
+  title: text("title"),
   genre: text("genre"),
   narrativeStyle: text("narrative_style"),
   setting: text("setting"),
@@ -39,16 +46,18 @@ export const continuationOptions = pgTable("continuation_options", {
 // Create schemas
 export const insertStorySchema = createInsertSchema(stories).omit({
   id: true,
-  createdAt: true
+  createdAt: true,
 });
 
 export const insertChapterSchema = createInsertSchema(chapters).omit({
   id: true,
-  createdAt: true
+  createdAt: true,
 });
 
-export const insertContinuationOptionSchema = createInsertSchema(continuationOptions).omit({
-  id: true
+export const insertContinuationOptionSchema = createInsertSchema(
+  continuationOptions,
+).omit({
+  id: true,
 });
 
 // Create types
@@ -59,7 +68,9 @@ export type Chapter = typeof chapters.$inferSelect;
 export type InsertChapter = z.infer<typeof insertChapterSchema>;
 
 export type ContinuationOption = typeof continuationOptions.$inferSelect;
-export type InsertContinuationOption = z.infer<typeof insertContinuationOptionSchema>;
+export type InsertContinuationOption = z.infer<
+  typeof insertContinuationOptionSchema
+>;
 
 // Specialized schemas for validation
 export const createStorySchema = z.object({

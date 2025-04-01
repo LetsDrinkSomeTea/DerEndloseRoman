@@ -9,7 +9,11 @@ import { PlusIcon, BookIcon } from "lucide-react";
 export default function Home() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  const { data: stories, isLoading, error } = useQuery<Story[]>({
+  const {
+    data: stories,
+    isLoading,
+    error,
+  } = useQuery<Story[]>({
     queryKey: ["/api/stories"],
   });
 
@@ -19,9 +23,9 @@ export default function Home() {
       <header className="bg-primary text-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">GeschichtenWelt</h1>
-          <Button 
+          <Button
             onClick={() => setCreateModalOpen(true)}
-            className="bg-[#FF9800] hover:bg-[#F57C00] text-white"
+            className="bg-secondary hover:bg-secondary-900 text-black"
           >
             <PlusIcon className="h-5 w-5 mr-1" />
             Neue Geschichte
@@ -54,9 +58,10 @@ export default function Home() {
               Keine Geschichten gefunden
             </h2>
             <p className="text-neutral-600 mb-6">
-              Erstelle deine erste KI-generierte Geschichte und beginne dein Abenteuer!
+              Erstelle deine erste KI-generierte Geschichte und beginne dein
+              Abenteuer!
             </p>
-            <Button 
+            <Button
               onClick={() => setCreateModalOpen(true)}
               className="bg-primary hover:bg-primary-dark text-white font-medium"
             >
@@ -66,7 +71,10 @@ export default function Home() {
         )}
       </main>
 
-      <CreateStoryModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
+      <CreateStoryModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+      />
     </div>
   );
 }

@@ -123,12 +123,12 @@ export async function generateRandomStoryDetails(partialDetails: StoryDetails): 
 
   const prompt = `Generiere zufällige Details für eine deutsche Geschichte. Fülle nur die fehlenden Felder aus:
   
-${partialDetails.title ? `Titel: ${partialDetails.title} (bereits angegeben)` : 'Titel: [FEHLT]'}
-${partialDetails.genre ? `Genre: ${partialDetails.genre} (bereits angegeben)` : 'Genre: [FEHLT]'}
-${partialDetails.narrativeStyle ? `Erzählstil: ${partialDetails.narrativeStyle} (bereits angegeben)` : 'Erzählstil: [FEHLT]'}
-${partialDetails.setting ? `Setting: ${partialDetails.setting} (bereits angegeben)` : 'Setting: [FEHLT]'}
-${partialDetails.targetAudience ? `Zielgruppe: ${partialDetails.targetAudience} (bereits angegeben)` : 'Zielgruppe: [FEHLT]'}
-${partialDetails.mainCharacter ? `Hauptcharakter: ${partialDetails.mainCharacter} (bereits angegeben)` : 'Hauptcharakter: [FEHLT]'}
+${partialDetails.title ? `title: ${partialDetails.title} (bereits angegeben)` : 'title: [FEHLT]'}
+${partialDetails.genre ? `genre: ${partialDetails.genre} (bereits angegeben)` : 'genre: [FEHLT]'}
+${partialDetails.narrativeStyle ? `narrativeStyle: ${partialDetails.narrativeStyle} (bereits angegeben)` : 'narrativeStyle: [FEHLT]'}
+${partialDetails.setting ? `setting: ${partialDetails.setting} (bereits angegeben)` : 'setting: [FEHLT]'}
+${partialDetails.targetAudience ? `targetAudience: ${partialDetails.targetAudience} (bereits angegeben)` : 'targetAudience: [FEHLT]'}
+${partialDetails.mainCharacter ? `mainCharacter: ${partialDetails.mainCharacter} (bereits angegeben)` : 'mainCharacter: [FEHLT]'}
 
 Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits angegebenen als auch die generierten).`;
 

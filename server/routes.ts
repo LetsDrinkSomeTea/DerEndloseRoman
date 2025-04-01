@@ -62,12 +62,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create the story in storage
       const story = await storage.createStory({
-        title: completeDetails.title || "Unbenannte Geschichte",
-        genre: completeDetails.genre || "",
-        narrativeStyle: completeDetails.narrativeStyle || "",
-        setting: completeDetails.setting || "",
-        targetAudience: completeDetails.targetAudience || "",
-        mainCharacter: completeDetails.mainCharacter || ""
+        title: completeDetails.title,
+        genre: completeDetails.genre,
+        narrativeStyle: completeDetails.narrativeStyle,
+        setting: completeDetails.setting,
+        targetAudience: completeDetails.targetAudience,
+        mainCharacter: completeDetails.mainCharacter
       });
       
       // Generate the first chapter

@@ -45,7 +45,9 @@ export default function ContinuationOptions({
             onClick={() => onSelectOption(option.id)}
           >
             <h4 className="font-bold text-neutral-900 mb-2">{option.title}</h4>
-            <p className="text-sm text-neutral-700 line-clamp-3">{option.preview}</p>
+            <p className="text-sm text-neutral-700 line-clamp-3">
+              {option.preview}
+            </p>
           </div>
         ))}
       </div>
@@ -53,7 +55,7 @@ export default function ContinuationOptions({
       <Card className="bg-white rounded-lg shadow-md p-4 mb-6">
         <CardContent className="p-0 pt-4">
           <div className="flex items-center mb-3">
-            <div className="w-8 h-8 rounded-full bg-[#4CAF50] flex items-center justify-center text-white mr-2">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white mr-2">
               <Plus className="h-5 w-5" />
             </div>
             <h3 className="text-lg font-bold text-neutral-900">
@@ -62,7 +64,10 @@ export default function ContinuationOptions({
           </div>
           <Textarea
             value={customPrompt}
-            onChange={(e) => onCustomPromptChange(e.target.value)}
+            onChange={(e) => {
+              selectedOptionId = null;
+              onCustomPromptChange(e.target.value);
+            }}
             placeholder="Beschreibe, wie die Geschichte weitergehen soll..."
             className="w-full border border-neutral-200 rounded-lg p-3"
             rows={3}
