@@ -8,12 +8,12 @@ const openai = new OpenAI({
 });
 
 export interface StoryDetails {
-  title?: string;
-  genre?: string;
-  narrativeStyle?: string;
-  setting?: string;
-  targetAudience?: string;
-  mainCharacter?: string;
+  title?: string | null;
+  genre?: string | null;
+  narrativeStyle?: string | null;
+  setting?: string | null;
+  targetAudience?: string | null;
+  mainCharacter?: string | null;
 }
 
 export interface ChapterGeneration {

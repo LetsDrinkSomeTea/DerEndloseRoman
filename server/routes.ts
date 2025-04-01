@@ -3,9 +3,11 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   createStorySchema, 
+  createCharacterSchema,
   continueStorySchema, 
   type Story,
-  type Chapter
+  type Chapter,
+  type Character
 } from "@shared/schema";
 import { generateChapter, generateRandomStoryDetails } from "./openai";
 import { ZodError } from "zod";
@@ -191,11 +193,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate the next chapter
       const storyDetails = {
         title: story.title,
-        genre: story.genre || undefined,
-        narrativeStyle: story.narrativeStyle || undefined,
-        setting: story.setting || undefined,
-        targetAudience: story.targetAudience || undefined,
-        mainCharacter: story.mainCharacter || undefined
+        genre: story.genre,
+        narrativeStyle: story.narrativeStyle,
+        setting: story.setting,
+        targetAudience: story.targetAudience,
+        mainCharacter: story.mainCharacter
       };
       
       const previousChapterData = {
@@ -241,6 +243,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(500).json({ message: "Fehler bei der Fortsetzung der Geschichte." });
+    }
+  });
+
+  // Get all characters for a story
+  app.get("/api/stories/:id/characters", async (req: Request, res: Response) => {
+    try {
+      const storyId = parseInt(req.params.id);
+      
+      // Check if the story exists
+      const story = await storage.getStory(storyId);
+      if (!story) {
+        return res.status(404).json({ message: "Geschichte nicht gefunden." });
+      }
+      
+      const characters = await storage.getCharacters(storyId);
+      res.json(characters);
+    } catch (error) {
+      console.error("Error fetching characters:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Charaktere." });
+    }
+  });
+
+  // Get a single character
+  app.get("/api/characters/:id", async (req: Request, res: Response) => {
+    try {
+      const characterId = parseInt(req.params.id);
+      const character = await storage.getCharacter(characterId);
+      
+      if (!character) {
+        return res.status(404).json({ message: "Charakter nicht gefunden." });
+      }
+      
+      res.json(character);
+    } catch (error) {
+      console.error("Error fetching character:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Charakters." });
+    }
+  });
+
+  // Create a new character
+  app.post("/api/characters", async (req: Request, res: Response) => {
+    try {
+      const validatedData = createCharacterSchema.parse(req.body);
+      
+      // Check if the story exists
+      const story = await storage.getStory(validatedData.storyId);
+      if (!story) {
+        return res.status(404).json({ message: "Geschichte nicht gefunden." });
+      }
+      
+      // Create the character
+      const character = await storage.createCharacter({
+        storyId: validatedData.storyId,
+        name: validatedData.name,
+        age: validatedData.age,
+        background: validatedData.background,
+        personality: validatedData.personality
+      });
+      
+      res.status(201).json(character);
+    } catch (error) {
+      console.error("Error creating character:", error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Ungültige Daten für den Charakter.", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ message: "Fehler beim Erstellen des Charakters." });
     }
   });
 

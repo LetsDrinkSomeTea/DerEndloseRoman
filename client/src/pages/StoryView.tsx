@@ -2,6 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Story } from "@/lib/types";
 import StoryReader from "@/components/StoryReader";
+import CharacterDialog from "@/components/CharacterDialog";
+import { Button } from "@/components/ui/button";
+import { UserRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function StoryView() {
@@ -10,15 +13,7 @@ export default function StoryView() {
   const { toast } = useToast();
   
   const { data: story, isLoading, error } = useQuery<Story>({
-    queryKey: [`/api/stories/${id}`],
-    onError: () => {
-      toast({
-        title: "Fehler",
-        description: "Die Geschichte konnte nicht geladen werden.",
-        variant: "destructive",
-      });
-      navigate("/");
-    },
+    queryKey: [`/api/stories/${id}`]
   });
 
   const handleBack = () => {
@@ -55,8 +50,19 @@ export default function StoryView() {
     <div className="min-h-screen">
       {/* Header */}
       <header className="bg-primary text-white shadow-md">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">GeschichtenWelt</h1>
+          <div className="flex gap-2">
+            <CharacterDialog 
+              storyId={parseInt(id)}
+              trigger={
+                <Button variant="secondary" size="sm">
+                  <UserRound className="mr-2 h-4 w-4" />
+                  Charaktere
+                </Button>
+              }
+            />
+          </div>
         </div>
       </header>
 

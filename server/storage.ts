@@ -3,6 +3,8 @@ import {
   type InsertStory, 
   type Chapter, 
   type InsertChapter, 
+  type Character,
+  type InsertCharacter,
   type ContinuationOption, 
   type InsertContinuationOption 
 } from "@shared/schema";
@@ -20,6 +22,11 @@ export interface IStorage {
   getChapterPath(chapterId: number): Promise<Chapter[]>;
   createChapter(chapter: InsertChapter): Promise<Chapter>;
   
+  // Character methods
+  getCharacters(storyId: number): Promise<Character[]>;
+  getCharacter(id: number): Promise<Character | undefined>;
+  createCharacter(character: InsertCharacter): Promise<Character>;
+  
   // Continuation options methods
   getContinuationOptions(chapterId: number): Promise<ContinuationOption[]>;
   createContinuationOption(option: InsertContinuationOption): Promise<ContinuationOption>;
@@ -29,17 +36,21 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private stories: Map<number, Story>;
   private chapters: Map<number, Chapter>;
+  private characters: Map<number, Character>;
   private continuationOptions: Map<number, ContinuationOption>;
   private storyIdCounter: number;
   private chapterIdCounter: number;
+  private characterIdCounter: number;
   private optionIdCounter: number;
 
   constructor() {
     this.stories = new Map();
     this.chapters = new Map();
+    this.characters = new Map();
     this.continuationOptions = new Map();
     this.storyIdCounter = 1;
     this.chapterIdCounter = 1;
+    this.characterIdCounter = 1;
     this.optionIdCounter = 1;
   }
 
@@ -55,8 +66,13 @@ export class MemStorage implements IStorage {
   async createStory(storyData: InsertStory): Promise<Story> {
     const id = this.storyIdCounter++;
     const story: Story = {
-      ...storyData,
       id,
+      title: storyData.title || null,
+      genre: storyData.genre || null,
+      narrativeStyle: storyData.narrativeStyle || null,
+      setting: storyData.setting || null,
+      targetAudience: storyData.targetAudience || null,
+      mainCharacter: storyData.mainCharacter || null,
       createdAt: new Date()
     };
     this.stories.set(id, story);
@@ -108,8 +124,13 @@ export class MemStorage implements IStorage {
     }
     
     const chapter: Chapter = {
-      ...chapterData,
       id,
+      storyId: chapterData.storyId,
+      parentId: chapterData.parentId || null,
+      title: chapterData.title,
+      content: chapterData.content,
+      prompt: chapterData.prompt || null,
+      isRoot: chapterData.isRoot || null,
       path: pathString,
       createdAt: new Date()
     };
@@ -136,6 +157,31 @@ export class MemStorage implements IStorage {
 
   async getContinuationOption(id: number): Promise<ContinuationOption | undefined> {
     return this.continuationOptions.get(id);
+  }
+
+  // Character methods
+  async getCharacters(storyId: number): Promise<Character[]> {
+    return Array.from(this.characters.values())
+      .filter(character => character.storyId === storyId);
+  }
+
+  async getCharacter(id: number): Promise<Character | undefined> {
+    return this.characters.get(id);
+  }
+
+  async createCharacter(characterData: InsertCharacter): Promise<Character> {
+    const id = this.characterIdCounter++;
+    const character: Character = {
+      id,
+      storyId: characterData.storyId,
+      name: characterData.name,
+      age: characterData.age || null,
+      background: characterData.background || null,
+      personality: characterData.personality || null,
+      createdAt: new Date()
+    };
+    this.characters.set(id, character);
+    return character;
   }
 }
 

@@ -46,3 +46,21 @@ export interface ContinueStoryInput {
   selectedOptionId?: number;
   customPrompt?: string;
 }
+
+export interface Character {
+  id: number;
+  storyId: number;
+  name: string;
+  age?: string | null;
+  background?: string | null;
+  personality?: string | null;
+  createdAt?: Date;
+}
+
+export interface CreateCharacterInput {
+  storyId: number;
+  name: string;
+  age?: string;
+  background?: string;
+  personality?: string;
+}

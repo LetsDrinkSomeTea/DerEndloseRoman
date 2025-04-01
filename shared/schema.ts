@@ -5,6 +5,8 @@ import {
   integer,
   varchar,
   timestamp,
+  foreignKey,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -34,6 +36,17 @@ export const chapters = pgTable("chapters", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Character model
+export const characters = pgTable("characters", {
+  id: serial("id").primaryKey(),
+  storyId: integer("story_id").notNull(),
+  name: text("name").notNull(),
+  age: text("age"),
+  background: text("background"),
+  personality: text("personality"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Continuation options model
 export const continuationOptions = pgTable("continuation_options", {
   id: serial("id").primaryKey(),
@@ -54,6 +67,11 @@ export const insertChapterSchema = createInsertSchema(chapters).omit({
   createdAt: true,
 });
 
+export const insertCharacterSchema = createInsertSchema(characters).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertContinuationOptionSchema = createInsertSchema(
   continuationOptions,
 ).omit({
@@ -66,6 +84,9 @@ export type InsertStory = z.infer<typeof insertStorySchema>;
 
 export type Chapter = typeof chapters.$inferSelect;
 export type InsertChapter = z.infer<typeof insertChapterSchema>;
+
+export type Character = typeof characters.$inferSelect;
+export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
 
 export type ContinuationOption = typeof continuationOptions.$inferSelect;
 export type InsertContinuationOption = z.infer<
@@ -80,6 +101,22 @@ export const createStorySchema = z.object({
   setting: z.string().optional(),
   targetAudience: z.string().optional(),
   mainCharacter: z.string().optional(),
+  characters: z.array(
+    z.object({
+      name: z.string(),
+      age: z.string().optional(),
+      background: z.string().optional(),
+      personality: z.string().optional(),
+    })
+  ).optional(),
+});
+
+export const createCharacterSchema = z.object({
+  storyId: z.number(),
+  name: z.string(),
+  age: z.string().optional(),
+  background: z.string().optional(),
+  personality: z.string().optional(),
 });
 
 export const continueStorySchema = z.object({
@@ -90,4 +127,5 @@ export const continueStorySchema = z.object({
 });
 
 export type CreateStoryInput = z.infer<typeof createStorySchema>;
+export type CreateCharacterInput = z.infer<typeof createCharacterSchema>;
 export type ContinueStoryInput = z.infer<typeof continueStorySchema>;
