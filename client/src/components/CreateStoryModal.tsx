@@ -1,4 +1,9 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +22,10 @@ interface CreateStoryModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModalProps) {
+export default function CreateStoryModal({
+  open,
+  onOpenChange,
+}: CreateStoryModalProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -36,11 +44,12 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
     name: "",
     age: "",
     personality: "",
-    background: ""
+    background: "",
   };
 
   const [characters, setCharacters] = useState<CharacterFormData[]>([]);
-  const [currentCharacter, setCurrentCharacter] = useState<CharacterFormData>(emptyCharacter);
+  const [currentCharacter, setCurrentCharacter] =
+    useState<CharacterFormData>(emptyCharacter);
 
   const [storyData, setStoryData] = useState<CreateStoryInput>({
     title: "",
@@ -50,8 +59,8 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
     targetAudience: "",
     mainCharacter: "",
     chapterLength: "100-200",
-    temperature: 7,
-    characters: []
+    temperature: 5,
+    characters: [],
   });
 
   const createStoryMutation = useMutation({
@@ -78,7 +87,9 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     setStoryData({
       ...storyData,
@@ -87,7 +98,7 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
   };
 
   const handleCharacterInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setCurrentCharacter({
       ...currentCharacter,
@@ -149,8 +160,8 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
         targetAudience: "",
         mainCharacter: "",
         chapterLength: "100-200",
-        temperature: 7,
-        characters: []
+        temperature: 5,
+        characters: [],
       });
       setCharacters([]);
       setCurrentCharacter(emptyCharacter);
@@ -175,10 +186,13 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                 Charaktere {characters.length > 0 && `(${characters.length})`}
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="details" className="space-y-4 mt-4">
               <div>
-                <Label htmlFor="title" className="text-sm font-medium text-neutral-700">
+                <Label
+                  htmlFor="title"
+                  className="text-sm font-medium text-neutral-700"
+                >
                   Titel <span className="text-neutral-500">(optional)</span>
                 </Label>
                 <Input
@@ -193,7 +207,10 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="genre" className="text-sm font-medium text-neutral-700">
+                  <Label
+                    htmlFor="genre"
+                    className="text-sm font-medium text-neutral-700"
+                  >
                     Genre <span className="text-neutral-500">(optional)</span>
                   </Label>
                   <Input
@@ -207,8 +224,12 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                 </div>
 
                 <div>
-                  <Label htmlFor="narrativeStyle" className="text-sm font-medium text-neutral-700">
-                    Erzählstil <span className="text-neutral-500">(optional)</span>
+                  <Label
+                    htmlFor="narrativeStyle"
+                    className="text-sm font-medium text-neutral-700"
+                  >
+                    Erzählstil{" "}
+                    <span className="text-neutral-500">(optional)</span>
                   </Label>
                   <Input
                     id="narrativeStyle"
@@ -222,7 +243,10 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
               </div>
 
               <div>
-                <Label htmlFor="setting" className="text-sm font-medium text-neutral-700">
+                <Label
+                  htmlFor="setting"
+                  className="text-sm font-medium text-neutral-700"
+                >
                   Setting <span className="text-neutral-500">(optional)</span>
                 </Label>
                 <Input
@@ -236,8 +260,12 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
               </div>
 
               <div>
-                <Label htmlFor="targetAudience" className="text-sm font-medium text-neutral-700">
-                  Zielgruppe <span className="text-neutral-500">(optional)</span>
+                <Label
+                  htmlFor="targetAudience"
+                  className="text-sm font-medium text-neutral-700"
+                >
+                  Zielgruppe{" "}
+                  <span className="text-neutral-500">(optional)</span>
                 </Label>
                 <Input
                   id="targetAudience"
@@ -250,8 +278,12 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
               </div>
 
               <div>
-                <Label htmlFor="mainCharacter" className="text-sm font-medium text-neutral-700">
-                  Hauptcharakter <span className="text-neutral-500">(optional)</span>
+                <Label
+                  htmlFor="mainCharacter"
+                  className="text-sm font-medium text-neutral-700"
+                >
+                  Hauptcharakter{" "}
+                  <span className="text-neutral-500">(optional)</span>
                 </Label>
                 <Textarea
                   id="mainCharacter"
@@ -266,7 +298,10 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <Label htmlFor="chapterLength" className="text-sm font-medium text-neutral-700">
+                  <Label
+                    htmlFor="chapterLength"
+                    className="text-sm font-medium text-neutral-700"
+                  >
                     Kapitellänge
                   </Label>
                   <select
@@ -276,18 +311,23 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                     onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border border-neutral-300 bg-white py-2 px-3 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
                   >
-                    <option value="100-200">Kurz (100-150 Wörter)</option>
+                    <option value="100-200">Kurz (100-200 Wörter)</option>
                     <option value="200-300">Mittel (200-300 Wörter)</option>
                     <option value="300-400">Lang (300-400 Wörter)</option>
                   </select>
                 </div>
 
                 <div>
-                  <Label htmlFor="temperature" className="text-sm font-medium text-neutral-700">
+                  <Label
+                    htmlFor="temperature"
+                    className="text-sm font-medium text-neutral-700"
+                  >
                     Kreativität
                   </Label>
                   <div className="flex items-center mt-2">
-                    <span className="text-xs text-neutral-600 mr-2">Präzise</span>
+                    <span className="text-xs text-neutral-600 mr-2">
+                      Präzise
+                    </span>
                     <input
                       type="range"
                       id="temperature"
@@ -296,22 +336,34 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                       max="10"
                       step="1"
                       value={storyData.temperature}
-                      onChange={(e) => setStoryData({...storyData, temperature: parseInt(e.target.value)})}
+                      onChange={(e) =>
+                        setStoryData({
+                          ...storyData,
+                          temperature: parseInt(e.target.value),
+                        })
+                      }
                       className="flex-grow h-1.5 appearance-none rounded-full bg-neutral-200 accent-primary"
                     />
-                    <span className="text-xs text-neutral-600 ml-2">Kreativ</span>
+                    <span className="text-xs text-neutral-600 ml-2">
+                      Kreativ
+                    </span>
                   </div>
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="characters" className="space-y-4 mt-4">
               {characters.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-sm font-medium text-neutral-700 mb-2">Hinzugefügte Charaktere:</h3>
+                  <h3 className="text-sm font-medium text-neutral-700 mb-2">
+                    Hinzugefügte Charaktere:
+                  </h3>
                   <div className="space-y-3">
                     {characters.map((char, index) => (
-                      <div key={index} className="border rounded-md p-3 relative">
+                      <div
+                        key={index}
+                        className="border rounded-md p-3 relative"
+                      >
                         <Button
                           variant="ghost"
                           size="sm"
@@ -321,15 +373,21 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
                         <h4 className="font-medium">{char.name}</h4>
-                        {char.age && <p className="text-sm text-gray-500 mt-1">Alter: {char.age}</p>}
+                        {char.age && (
+                          <p className="text-sm text-gray-500 mt-1">
+                            Alter: {char.age}
+                          </p>
+                        )}
                         {char.personality && (
                           <p className="text-sm mt-1">
-                            <span className="font-medium">Persönlichkeit:</span> {char.personality}
+                            <span className="font-medium">Persönlichkeit:</span>{" "}
+                            {char.personality}
                           </p>
                         )}
                         {char.background && (
                           <p className="text-sm mt-1">
-                            <span className="font-medium">Hintergrund:</span> {char.background}
+                            <span className="font-medium">Hintergrund:</span>{" "}
+                            {char.background}
                           </p>
                         )}
                       </div>
@@ -339,11 +397,16 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
               )}
 
               <div className="border rounded-md p-4">
-                <h3 className="text-sm font-medium text-neutral-700 mb-3">Neuer Charakter <span className="text-neutral-500">(optional)</span></h3>
-                
+                <h3 className="text-sm font-medium text-neutral-700 mb-3">
+                  Neuer Charakter{" "}
+                  <span className="text-neutral-500">(optional)</span>
+                </h3>
+
                 <div className="space-y-3">
                   <div>
-                    <Label htmlFor="charName" className="text-sm">Name</Label>
+                    <Label htmlFor="charName" className="text-sm">
+                      Name
+                    </Label>
                     <Input
                       id="charName"
                       name="name"
@@ -352,9 +415,11 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                       onChange={handleCharacterInputChange}
                     />
                   </div>
-                  
+
                   <div>
-                    <Label htmlFor="charAge" className="text-sm">Alter</Label>
+                    <Label htmlFor="charAge" className="text-sm">
+                      Alter
+                    </Label>
                     <Input
                       id="charAge"
                       name="age"
@@ -363,9 +428,11 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                       onChange={handleCharacterInputChange}
                     />
                   </div>
-                  
+
                   <div>
-                    <Label htmlFor="charPersonality" className="text-sm">Persönlichkeit</Label>
+                    <Label htmlFor="charPersonality" className="text-sm">
+                      Persönlichkeit
+                    </Label>
                     <Textarea
                       id="charPersonality"
                       name="personality"
@@ -375,9 +442,11 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                       rows={2}
                     />
                   </div>
-                  
+
                   <div>
-                    <Label htmlFor="charBackground" className="text-sm">Hintergrund</Label>
+                    <Label htmlFor="charBackground" className="text-sm">
+                      Hintergrund
+                    </Label>
                     <Textarea
                       id="charBackground"
                       name="background"
@@ -387,7 +456,7 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                       rows={2}
                     />
                   </div>
-                  
+
                   <Button
                     type="button"
                     onClick={addCharacter}
@@ -398,9 +467,13 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                   </Button>
                 </div>
               </div>
-              
+
               <div className="text-sm text-gray-500 mt-2">
-                <p>Hinweis: Wenn keine Charaktere angegeben werden, generiert die KI automatisch mindestens einen passenden Charakter für die Geschichte.</p>
+                <p>
+                  Hinweis: Wenn keine Charaktere angegeben werden, generiert die
+                  KI automatisch mindestens einen passenden Charakter für die
+                  Geschichte.
+                </p>
               </div>
             </TabsContent>
           </Tabs>
@@ -415,8 +488,8 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
               Abbrechen
             </Button>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={createStoryMutation.isPending}
               className="bg-primary hover:bg-primary-dark text-white"
             >

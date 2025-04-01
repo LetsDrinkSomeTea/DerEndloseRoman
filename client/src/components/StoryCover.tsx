@@ -27,10 +27,15 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
           {story.title}
         </h1>
         <p className="text-gray-500 mt-2">
-          Erstellt am {story.createdAt ? new Date(story.createdAt as unknown as string).toLocaleDateString("de-DE") : 'unbekannt'}
+          Erstellt am{" "}
+          {story.createdAt
+            ? new Date(story.createdAt as unknown as string).toLocaleDateString(
+                "de-DE",
+              )
+            : "unbekannt"}
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Linke Spalte: Details */}
         <Card className="md:col-span-2">
@@ -69,14 +74,16 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
                   <p className="text-sm text-gray-600 mt-1">{story.setting}</p>
                 </div>
               )}
-              
+
               {story.mainCharacter && (
                 <div>
                   <h3 className="text-sm font-medium flex items-center">
                     <Users className="h-4 w-4 mr-1 text-gray-500" />
                     Hauptcharakter
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">{story.mainCharacter}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {story.mainCharacter}
+                  </p>
                 </div>
               )}
 
@@ -88,13 +95,16 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
                       Kapitellänge
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      {story.chapterLength === "100-150" && "Kurz (100-150 Wörter)"}
-                      {story.chapterLength === "200-300" && "Mittel (200-300 Wörter)"}
-                      {story.chapterLength === "300-400" && "Lang (300-400 Wörter)"}
+                      {story.chapterLength === "100-200" &&
+                        "Kurz (100-200 Wörter)"}
+                      {story.chapterLength === "200-300" &&
+                        "Mittel (200-300 Wörter)"}
+                      {story.chapterLength === "300-400" &&
+                        "Lang (300-400 Wörter)"}
                     </p>
                   </div>
                 )}
-                
+
                 {story.temperature !== undefined && (
                   <div>
                     <h3 className="text-sm font-medium flex items-center">
@@ -104,7 +114,7 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
                     <div className="flex items-center mt-2">
                       <span className="text-xs text-neutral-600 mr-2">1</span>
                       <div className="flex-grow h-1.5 bg-neutral-200 rounded-full">
-                        <div 
+                        <div
                           className="h-full bg-primary rounded-full"
                           style={{ width: `${(story.temperature || 5) * 10}%` }}
                         />
@@ -134,7 +144,9 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
                     <div key={character.id} className="border rounded-md p-3">
                       <h3 className="font-medium">{character.name}</h3>
                       {character.age && (
-                        <p className="text-sm text-gray-500 mt-1">Alter: {character.age}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Alter: {character.age}
+                        </p>
                       )}
                       {character.personality && (
                         <p className="text-sm mt-2">
@@ -151,14 +163,16 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500">Keine Charaktere gefunden.</p>
+                  <p className="text-sm text-gray-500">
+                    Keine Charaktere gefunden.
+                  </p>
                 )}
               </div>
             </ScrollArea>
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="flex justify-center mt-8">
         <Button size="lg" onClick={onStartReading} className="font-medium">
           Geschichte lesen

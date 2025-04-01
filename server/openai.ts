@@ -99,7 +99,7 @@ export async function generateChapter(
 
   prompt += `\nFormat: Antworte bitte mit einem JSON Objekt im folgenden Format:
   {
-    "title": "Kapiteltitel",
+    "title": "Kapiteltitel (Nur der Titel des Kapitels, keine Nummer oder ähnliches)",
     "content": "Der Kapitelinhalt (${details.chapterLength || CHAPTER_LENGHT_IN_WORDS} Wörter)",
     "summary": "Eine Zusammenfassung der gesamten Geschichte bis zu diesem Punkt (60-80 Wörter)",
     "isEnding": false,
@@ -133,7 +133,10 @@ export async function generateChapter(
 
   try {
     const temperature = details.temperature
-      ? Math.max(0.5, Math.min(1.5, (details.temperature - 1) / 9 + 0.5))
+      ? Math.max(
+          0.7,
+          Math.min(1.3, ((details.temperature - 1) / 9) * 0.6 + 0.7),
+        )
       : 1;
 
     const response = await openai.chat.completions.create({
@@ -224,6 +227,12 @@ ${
 Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits angegebenen als auch die generierten).`;
 
   try {
+    const temperature = partialDetails.temperature
+      ? Math.max(
+          0.7,
+          Math.min(1.3, ((partialDetails.temperature - 1) / 9) * 0.6 + 0.7),
+        )
+      : 1;
     const response = await openai.chat.completions.create({
       model: MODEL,
       messages: [
@@ -237,6 +246,7 @@ Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits ang
           content: prompt,
         },
       ],
+      temperature: temperature,
       response_format: { type: "json_object" },
     });
 

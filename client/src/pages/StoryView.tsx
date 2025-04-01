@@ -13,9 +13,13 @@ export default function StoryView() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [showCover, setShowCover] = useState(true);
-  
-  const { data: story, isLoading, error } = useQuery<Story>({
-    queryKey: [`/api/stories/${id}`]
+
+  const {
+    data: story,
+    isLoading,
+    error,
+  } = useQuery<Story>({
+    queryKey: [`/api/stories/${id}`],
   });
 
   const handleBack = () => {
@@ -53,10 +57,15 @@ export default function StoryView() {
       {/* Header */}
       <header className="bg-primary text-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">GeschichtenWelt</h1>
+          <h1
+            className="text-2xl font-bold cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            GeschichtenWelt
+          </h1>
           <div className="flex gap-2">
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               size="sm"
               onClick={() => setShowCover(!showCover)}
             >
@@ -72,8 +81,8 @@ export default function StoryView() {
                 </>
               )}
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={handleBack}
               className="bg-white/20 hover:bg-white/30"
@@ -87,8 +96,8 @@ export default function StoryView() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {showCover ? (
-          <StoryCover 
-            story={story} 
+          <StoryCover
+            story={story}
             onStartReading={() => setShowCover(false)}
           />
         ) : (
