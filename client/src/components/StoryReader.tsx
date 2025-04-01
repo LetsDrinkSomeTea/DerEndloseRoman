@@ -27,7 +27,7 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
   const [navTab, setNavTab] = useState<string>("path"); // "path" oder "tree"
 
   // Fetch all chapters for the tree view
-  const { data: allChapters = [] } = useQuery({
+  const { data: allChapters = [] as Chapter[] } = useQuery({
     queryKey: ["/api/stories", story.id, "chapters"],
     queryFn: async () => {
       const response = await fetch(`/api/stories/${story.id}/chapters`);
@@ -114,10 +114,33 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
     },
   });
 
+  // Lädt die Fortsetzungsoptionen für ein Kapitel
+  const loadChapterWithOptions = async (chapter: Chapter) => {
+    try {
+      const response = await fetch(`/api/chapters/${chapter.id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch chapter with options");
+      }
+      const chapterWithOptions = await response.json();
+      setCurrentChapter(chapterWithOptions);
+      setSelectedOptionId(null);
+      setCustomPrompt("");
+    } catch (error) {
+      console.error("Error loading chapter:", error);
+      toast({
+        title: "Fehler",
+        description: "Kapitel konnte nicht vollständig geladen werden.",
+        variant: "destructive",
+      });
+      // Fallback zum ursprünglichen Kapitel
+      setCurrentChapter(chapter);
+      setSelectedOptionId(null);
+      setCustomPrompt("");
+    }
+  };
+
   const handleSelectChapter = (chapter: Chapter) => {
-    setCurrentChapter(chapter);
-    setSelectedOptionId(null);
-    setCustomPrompt("");
+    loadChapterWithOptions(chapter);
   };
 
   const handleSelectOption = (id: number) => {
@@ -141,9 +164,7 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
       const previousChapter =
         chapterPath[chapterPath.length - 1] || story.rootChapter;
       if (previousChapter) {
-        setCurrentChapter(previousChapter);
-        setSelectedOptionId(null);
-        setCustomPrompt("");
+        loadChapterWithOptions(previousChapter);
       }
     } else {
       // At root, go back to story list
@@ -159,7 +180,7 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
   const chapterDepth = chapterPath.length + 1;
 
   const handleChapterSelect = (chapterId: number) => {
-    const chapter = allChapters.find(ch => ch.id === chapterId);
+    const chapter = allChapters.find((ch: Chapter) => ch.id === chapterId);
     if (chapter) {
       handleSelectChapter(chapter);
     }
