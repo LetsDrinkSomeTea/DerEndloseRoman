@@ -69,7 +69,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         narrativeStyle: completeDetails.narrativeStyle,
         setting: completeDetails.setting,
         targetAudience: completeDetails.targetAudience,
-        mainCharacter: completeDetails.mainCharacter
+        mainCharacter: completeDetails.mainCharacter,
+        chapterLength: completeDetails.chapterLength || "100-150",
+        temperature: completeDetails.temperature || 7
       });
       
       // Create characters if they exist
@@ -220,7 +222,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         narrativeStyle: story.narrativeStyle,
         setting: story.setting,
         targetAudience: story.targetAudience,
-        mainCharacter: story.mainCharacter
+        mainCharacter: story.mainCharacter,
+        chapterLength: story.chapterLength,
+        temperature: story.temperature
       };
       
       // Lade alle Charaktere der Geschichte

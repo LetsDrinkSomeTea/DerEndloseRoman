@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Chapter } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import React, { useState } from "react";
+import { Chapter } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from '@/hooks/use-mobile';
-import { ChevronRight, ChevronDown, BookOpen } from 'lucide-react';
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ChevronRight, ChevronDown, BookOpen, Book } from "lucide-react";
 
 interface ChapterTreeProps {
   chapters: Chapter[];
@@ -25,16 +25,16 @@ function buildChapterTree(chapters: Chapter[]): ChapterNode[] {
   const nodeMap = new Map<number, ChapterNode>();
 
   // Zuerst alle Knoten erstellen
-  chapters.forEach(chapter => {
+  chapters.forEach((chapter) => {
     const node: ChapterNode = {
       chapter,
-      children: []
+      children: [],
     };
     nodeMap.set(chapter.id, node);
   });
 
   // Dann die Beziehungen aufbauen
-  chapters.forEach(chapter => {
+  chapters.forEach((chapter) => {
     const node = nodeMap.get(chapter.id);
     if (node) {
       if (chapter.parentId) {
@@ -68,43 +68,46 @@ const TreeNode: React.FC<{
 
   // Berechne Padding basierend auf der Ebene
   const indentStyle = {
-    paddingLeft: `${level * (isMobile ? 12 : 16)}px`
+    paddingLeft: `${level * (isMobile ? 12 : 16)}px`,
   };
 
   return (
     <div className="chapter-node">
-      <div 
+      <div
         className={cn(
           "flex items-center py-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer",
-          isActive && "bg-primary/10 font-medium"
+          isActive && "bg-primary/10 font-medium",
         )}
         style={indentStyle}
         onClick={() => onSelectChapter(node.chapter.id)}
       >
         {hasChildren ? (
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="h-5 w-5 p-0 mr-1"
-            onClick={(e) => { 
+            onClick={(e) => {
               e.stopPropagation();
               setExpanded(!expanded);
             }}
           >
-            {expanded ? 
-              <ChevronDown className="h-4 w-4" /> : 
+            {expanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
               <ChevronRight className="h-4 w-4" />
-            }
+            )}
           </Button>
+        ) : node.chapter.isEnding ? (
+          <Book className="h-4 w-4 ml-1 mr-2 text-gray-500" />
         ) : (
           <BookOpen className="h-4 w-4 ml-1 mr-2 text-gray-500" />
         )}
         <span className="truncate">{node.chapter.title}</span>
       </div>
-      
+
       {expanded && hasChildren && (
         <div className="children">
-          {node.children.map(childNode => (
+          {node.children.map((childNode) => (
             <TreeNode
               key={childNode.chapter.id}
               node={childNode}
@@ -119,15 +122,19 @@ const TreeNode: React.FC<{
   );
 };
 
-export default function ChapterTree({ chapters, currentChapter, onSelectChapter }: ChapterTreeProps) {
+export default function ChapterTree({
+  chapters,
+  currentChapter,
+  onSelectChapter,
+}: ChapterTreeProps) {
   const treeNodes = buildChapterTree(chapters);
 
   return (
     <div className="chapter-tree overflow-y-auto max-h-[70vh]">
       <h3 className="font-medium text-sm mb-2">Kapitelstruktur</h3>
       <Separator className="mb-2" />
-      
-      {treeNodes.map(node => (
+
+      {treeNodes.map((node) => (
         <TreeNode
           key={node.chapter.id}
           node={node}

@@ -7,6 +7,7 @@ import {
   timestamp,
   foreignKey,
   primaryKey,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -20,6 +21,8 @@ export const stories = pgTable("stories", {
   setting: text("setting"),
   targetAudience: text("target_audience"),
   mainCharacter: text("main_character"),
+  chapterLength: text("chapter_length").default("100-150"),
+  temperature: integer("temperature").default(7),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -103,6 +106,8 @@ export const createStorySchema = z.object({
   setting: z.string().optional(),
   targetAudience: z.string().optional(),
   mainCharacter: z.string().optional(),
+  chapterLength: z.enum(["100-150", "200-300", "300-400"]).optional().default("100-150"),
+  temperature: z.number().int().min(1).max(10).optional().default(7),
   characters: z.array(
     z.object({
       name: z.string(),

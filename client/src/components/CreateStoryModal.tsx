@@ -49,6 +49,8 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
     setting: "",
     targetAudience: "",
     mainCharacter: "",
+    chapterLength: "100-150",
+    temperature: 7,
     characters: []
   });
 
@@ -146,6 +148,8 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
         setting: "",
         targetAudience: "",
         mainCharacter: "",
+        chapterLength: "100-150",
+        temperature: 7,
         characters: []
       });
       setCharacters([]);
@@ -258,6 +262,46 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                   className="mt-1"
                   rows={3}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <Label htmlFor="chapterLength" className="text-sm font-medium text-neutral-700">
+                    Kapitellänge
+                  </Label>
+                  <select
+                    id="chapterLength"
+                    name="chapterLength"
+                    value={storyData.chapterLength}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border border-neutral-300 bg-white py-2 px-3 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
+                  >
+                    <option value="100-150">Kurz (100-150 Wörter)</option>
+                    <option value="200-300">Mittel (200-300 Wörter)</option>
+                    <option value="300-400">Lang (300-400 Wörter)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="temperature" className="text-sm font-medium text-neutral-700">
+                    Kreativität
+                  </Label>
+                  <div className="flex items-center mt-2">
+                    <span className="text-xs text-neutral-600 mr-2">Präzise</span>
+                    <input
+                      type="range"
+                      id="temperature"
+                      name="temperature"
+                      min="1"
+                      max="10"
+                      step="1"
+                      value={storyData.temperature}
+                      onChange={(e) => setStoryData({...storyData, temperature: parseInt(e.target.value)})}
+                      className="flex-grow h-1.5 appearance-none rounded-full bg-neutral-200 accent-primary"
+                    />
+                    <span className="text-xs text-neutral-600 ml-2">Kreativ</span>
+                  </div>
+                </div>
               </div>
             </TabsContent>
             

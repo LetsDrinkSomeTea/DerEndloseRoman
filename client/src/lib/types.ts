@@ -6,6 +6,8 @@ export interface Story {
   setting?: string;
   targetAudience?: string;
   mainCharacter?: string;
+  chapterLength?: string;
+  temperature?: number;
   createdAt?: Date;
   rootChapter?: Chapter;
 }
@@ -40,6 +42,8 @@ export interface CreateStoryInput {
   setting?: string;
   targetAudience?: string;
   mainCharacter?: string;
+  chapterLength?: string;
+  temperature?: number;
   characters?: {
     name: string;
     age?: string;

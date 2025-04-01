@@ -75,6 +75,8 @@ export class MemStorage implements IStorage {
       setting: storyData.setting || null,
       targetAudience: storyData.targetAudience || null,
       mainCharacter: storyData.mainCharacter || null,
+      chapterLength: storyData.chapterLength || "100-150",
+      temperature: storyData.temperature || 7,
       createdAt: new Date()
     };
     this.stories.set(id, story);

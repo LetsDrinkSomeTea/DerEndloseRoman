@@ -2,6 +2,7 @@ import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const MODEL = "gpt-4o-mini";
+const CHAPTER_LENGHT_IN_WORDS = "100-200";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -14,6 +15,8 @@ export interface StoryDetails {
   setting?: string | null;
   targetAudience?: string | null;
   mainCharacter?: string | null;
+  chapterLength?: string | null;
+  temperature?: number | null;
 }
 
 export interface ChapterGeneration {
@@ -67,8 +70,10 @@ export async function generateChapter(
     chapterContext.characters.forEach((character, index) => {
       prompt += `Character ${index + 1}: ${character.name}`;
       if (character.age) prompt += `, ${character.age} Jahre alt`;
-      if (character.personality) prompt += `, Persönlichkeit: ${character.personality}`;
-      if (character.background) prompt += `, Hintergrund: ${character.background}`;
+      if (character.personality)
+        prompt += `, Persönlichkeit: ${character.personality}`;
+      if (character.background)
+        prompt += `, Hintergrund: ${character.background}`;
       prompt += `\n`;
     });
   }
@@ -77,7 +82,7 @@ export async function generateChapter(
   if (chapterContext) {
     prompt += `\nVorheriges Kapitel Titel: ${chapterContext.title}\n`;
     prompt += `Vorheriges Kapitel Inhalt: ${chapterContext.content}\n`;
-    
+
     if (chapterContext.previousSummary) {
       prompt += `\nZusammenfassung der bisherigen Geschichte: ${chapterContext.previousSummary}\n`;
     }
@@ -87,31 +92,31 @@ export async function generateChapter(
     prompt += `\nBitte berücksichtige folgende Anweisung für das neue Kapitel: ${customPrompt}\n`;
   }
 
-  prompt += `\nDas Kapitel sollte 100-150 Wörter umfassen.`;
+  prompt += `\nDas Kapitel sollte ${details.chapterLength || CHAPTER_LENGHT_IN_WORDS} Wörter umfassen.`;
   prompt += `\nDu kannst selbst entscheiden, ob dieses Kapitel ein Geschichtsende sein soll. Wenn du dich für ein Ende entscheidest, setze "isEnding" auf true und generiere keine Fortsetzungsoptionen.`;
   prompt += `\nWenn es kein Ende ist, generiere 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.`;
   prompt += `\nErzähle die Geschichte ansprechend und berücksichtige alle Charaktere und die Zusammenfassung.`;
-  
+
   prompt += `\nFormat: Antworte bitte mit einem JSON Objekt im folgenden Format:
   {
     "title": "Kapiteltitel",
-    "content": "Der Kapitelinhalt (100-150 Wörter)",
+    "content": "Der Kapitelinhalt (${details.chapterLength || CHAPTER_LENGHT_IN_WORDS} Wörter)",
     "summary": "Eine Zusammenfassung der gesamten Geschichte bis zu diesem Punkt (60-80 Wörter)",
     "isEnding": false,
     "continuationOptions": [
       {
         "title": "Titel der ersten Option",
-        "preview": "Kurze Vorschau (etwa 15-20 Wörter)",
+        "preview": "Kurze Vorschau (etwa 10-15 Wörter)",
         "prompt": "Detaillierter Prompt für diese Fortsetzung"
       },
       {
         "title": "Titel der zweiten Option",
-        "preview": "Kurze Vorschau (etwa 15-20 Wörter)",
+        "preview": "Kurze Vorschau (etwa 10-15 Wörter)",
         "prompt": "Detaillierter Prompt für diese Fortsetzung"
       },
       {
         "title": "Titel der dritten Option",
-        "preview": "Kurze Vorschau (etwa 15-20 Wörter)",
+        "preview": "Kurze Vorschau (etwa 10-15 Wörter)",
         "prompt": "Detaillierter Prompt für diese Fortsetzung"
       }
     ]
@@ -120,13 +125,18 @@ export async function generateChapter(
   Falls du entscheidest, dass dies das Ende der Geschichte sein soll:
   {
     "title": "Kapiteltitel",
-    "content": "Der Kapitelinhalt, der die Geschichte zu einem befriedigenden Abschluss bringt (100-150 Wörter)",
+    "content": "Der Kapitelinhalt, der die Geschichte zu einem befriedigenden Abschluss bringt (${details.chapterLength || CHAPTER_LENGHT_IN_WORDS} Wörter)",
     "summary": "Eine abschließende Zusammenfassung der gesamten Geschichte (60-80 Wörter)",
     "isEnding": true,
     "continuationOptions": []
   }`;
 
   try {
+    // Temperatur zwischen 0 und 1 normalisieren (von 1-10 auf 0.1-1)
+    const temperature = details.temperature 
+      ? Math.max(0.1, Math.min(1, details.temperature / 10)) 
+      : 0.7;
+    
     const response = await openai.chat.completions.create({
       model: MODEL,
       messages: [
@@ -140,6 +150,7 @@ export async function generateChapter(
           content: prompt,
         },
       ],
+      temperature: temperature,
       response_format: { type: "json_object" },
     });
 
