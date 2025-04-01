@@ -38,6 +38,12 @@ export interface CreateStoryInput {
   setting?: string;
   targetAudience?: string;
   mainCharacter?: string;
+  characters?: {
+    name: string;
+    age?: string;
+    personality?: string;
+    background?: string;
+  }[];
 }
 
 export interface ContinueStoryInput {

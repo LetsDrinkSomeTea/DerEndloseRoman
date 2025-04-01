@@ -105,18 +105,31 @@ export async function generateChapter(
   }
 }
 
+export interface CharacterCreation {
+  name: string;
+  age?: string;
+  personality?: string;
+  background?: string;
+}
+
+export interface StoryDetailsWithCharacters extends StoryDetails {
+  characters?: CharacterCreation[];
+}
+
 /**
  * Generate random story details for empty fields
  */
-export async function generateRandomStoryDetails(partialDetails: StoryDetails): Promise<StoryDetails> {
-  // Don't make an API call if all fields are provided
+export async function generateRandomStoryDetails(partialDetails: StoryDetailsWithCharacters): Promise<StoryDetailsWithCharacters> {
+  // Don't make an API call if all fields are provided and at least one character
   if (
     partialDetails.title &&
     partialDetails.genre &&
     partialDetails.narrativeStyle &&
     partialDetails.setting &&
     partialDetails.targetAudience &&
-    partialDetails.mainCharacter
+    partialDetails.mainCharacter &&
+    partialDetails.characters && 
+    partialDetails.characters.length > 0
   ) {
     return partialDetails;
   }
@@ -130,6 +143,21 @@ ${partialDetails.setting ? `setting: ${partialDetails.setting} (bereits angegebe
 ${partialDetails.targetAudience ? `targetAudience: ${partialDetails.targetAudience} (bereits angegeben)` : 'targetAudience: [FEHLT]'}
 ${partialDetails.mainCharacter ? `mainCharacter: ${partialDetails.mainCharacter} (bereits angegeben)` : 'mainCharacter: [FEHLT]'}
 
+Außerdem generiere mindestens einen Hauptcharakter für die Geschichte mit folgendem Format:
+"characters": [
+  {
+    "name": "Name des Charakters",
+    "age": "Alter des Charakters",
+    "personality": "Persönlichkeitsbeschreibung (ca. 20-30 Wörter)",
+    "background": "Hintergrundgeschichte des Charakters (ca. 20-30 Wörter)"
+  }
+]
+
+${partialDetails.characters && partialDetails.characters.length > 0 ? 
+  `characters: ${JSON.stringify(partialDetails.characters, null, 2)} (bereits angegeben)` : 
+  'characters: [FEHLT]'
+}
+
 Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits angegebenen als auch die generierten).`;
 
   try {
@@ -138,7 +166,7 @@ Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits ang
       messages: [
         {
           role: "system",
-          content: "Du hilfst dabei, kreative und abwechslungsreiche Geschichtendetails zu generieren."
+          content: "Du hilfst dabei, kreative und abwechslungsreiche Geschichtendetails und Charaktere zu generieren."
         },
         {
           role: "user",
@@ -153,7 +181,7 @@ Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits ang
       throw new Error("OpenAI returned empty content");
     }
 
-    return JSON.parse(content) as StoryDetails;
+    return JSON.parse(content) as StoryDetailsWithCharacters;
   } catch (error) {
     console.error("Error generating random story details:", error);
     // In case of an error, return the original details and let the client handle missing fields

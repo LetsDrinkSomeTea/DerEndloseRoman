@@ -9,7 +9,7 @@ import {
   type Chapter,
   type Character
 } from "@shared/schema";
-import { generateChapter, generateRandomStoryDetails } from "./openai";
+import { generateChapter, generateRandomStoryDetails, CharacterCreation } from "./openai";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -59,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = createStorySchema.parse(req.body);
       
-      // Use OpenAI to fill in missing details
+      // Use OpenAI to fill in missing details including characters
       const completeDetails = await generateRandomStoryDetails(validatedData);
       
       // Create the story in storage
@@ -71,6 +71,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetAudience: completeDetails.targetAudience,
         mainCharacter: completeDetails.mainCharacter
       });
+      
+      // Create characters if they exist
+      if (completeDetails.characters && completeDetails.characters.length > 0) {
+        for (const characterData of completeDetails.characters) {
+          await storage.createCharacter({
+            storyId: story.id,
+            name: characterData.name,
+            age: characterData.age,
+            personality: characterData.personality,
+            background: characterData.background
+          });
+        }
+      }
       
       // Generate the first chapter
       const chapterData = await generateChapter(completeDetails);
