@@ -1,12 +1,12 @@
-import { 
-  type Story, 
-  type InsertStory, 
-  type Chapter, 
-  type InsertChapter, 
+import {
+  type Story,
+  type InsertStory,
+  type Chapter,
+  type InsertChapter,
   type Character,
   type InsertCharacter,
-  type ContinuationOption, 
-  type InsertContinuationOption 
+  type ContinuationOption,
+  type InsertContinuationOption,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -21,17 +21,22 @@ export interface IStorage {
   getRootChapter(storyId: number): Promise<Chapter | undefined>;
   getChapterPath(chapterId: number): Promise<Chapter[]>;
   createChapter(chapter: InsertChapter): Promise<Chapter>;
-  getNextChapterByOption(parentChapterId: number, optionId: number): Promise<Chapter | undefined>;
+  getNextChapterByOption(
+    parentChapterId: number,
+    optionId: number,
+  ): Promise<Chapter | undefined>;
   getAllChapters(storyId: number): Promise<Chapter[]>;
-  
+
   // Character methods
   getCharacters(storyId: number): Promise<Character[]>;
   getCharacter(id: number): Promise<Character | undefined>;
   createCharacter(character: InsertCharacter): Promise<Character>;
-  
+
   // Continuation options methods
   getContinuationOptions(chapterId: number): Promise<ContinuationOption[]>;
-  createContinuationOption(option: InsertContinuationOption): Promise<ContinuationOption>;
+  createContinuationOption(
+    option: InsertContinuationOption,
+  ): Promise<ContinuationOption>;
   getContinuationOption(id: number): Promise<ContinuationOption | undefined>;
 }
 
@@ -76,8 +81,8 @@ export class MemStorage implements IStorage {
       targetAudience: storyData.targetAudience || null,
       mainCharacter: storyData.mainCharacter || null,
       chapterLength: storyData.chapterLength || "100-200",
-      temperature: storyData.temperature || 7,
-      createdAt: new Date()
+      temperature: storyData.temperature || 5,
+      createdAt: new Date(),
     };
     this.stories.set(id, story);
     return story;
@@ -89,13 +94,15 @@ export class MemStorage implements IStorage {
   }
 
   async getChaptersByStoryId(storyId: number): Promise<Chapter[]> {
-    return Array.from(this.chapters.values())
-      .filter(chapter => chapter.storyId === storyId);
+    return Array.from(this.chapters.values()).filter(
+      (chapter) => chapter.storyId === storyId,
+    );
   }
 
   async getRootChapter(storyId: number): Promise<Chapter | undefined> {
-    return Array.from(this.chapters.values())
-      .find(chapter => chapter.storyId === storyId && chapter.isRoot === 1);
+    return Array.from(this.chapters.values()).find(
+      (chapter) => chapter.storyId === storyId && chapter.isRoot === 1,
+    );
   }
 
   async getChapterPath(chapterId: number): Promise<Chapter[]> {
@@ -104,11 +111,11 @@ export class MemStorage implements IStorage {
 
     while (currentChapter) {
       path.unshift(currentChapter);
-      
+
       if (!currentChapter.parentId) {
         break;
       }
-      
+
       currentChapter = await this.getChapter(currentChapter.parentId);
     }
 
@@ -117,7 +124,7 @@ export class MemStorage implements IStorage {
 
   async createChapter(chapterData: InsertChapter): Promise<Chapter> {
     const id = this.chapterIdCounter++;
-    
+
     // Create a path string to identify this branch
     let pathString = `${id}`;
     if (chapterData.parentId) {
@@ -126,7 +133,7 @@ export class MemStorage implements IStorage {
         pathString = `${parentChapter.path}-${id}`;
       }
     }
-    
+
     const chapter: Chapter = {
       id,
       storyId: chapterData.storyId,
@@ -138,37 +145,45 @@ export class MemStorage implements IStorage {
       isRoot: chapterData.isRoot || null,
       isEnding: chapterData.isEnding || 0,
       path: pathString,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
-    
+
     this.chapters.set(id, chapter);
     return chapter;
   }
 
   // Continuation options methods
-  async getContinuationOptions(chapterId: number): Promise<ContinuationOption[]> {
-    return Array.from(this.continuationOptions.values())
-      .filter(option => option.chapterId === chapterId);
+  async getContinuationOptions(
+    chapterId: number,
+  ): Promise<ContinuationOption[]> {
+    return Array.from(this.continuationOptions.values()).filter(
+      (option) => option.chapterId === chapterId,
+    );
   }
 
-  async createContinuationOption(optionData: InsertContinuationOption): Promise<ContinuationOption> {
+  async createContinuationOption(
+    optionData: InsertContinuationOption,
+  ): Promise<ContinuationOption> {
     const id = this.optionIdCounter++;
     const option: ContinuationOption = {
       ...optionData,
-      id
+      id,
     };
     this.continuationOptions.set(id, option);
     return option;
   }
 
-  async getContinuationOption(id: number): Promise<ContinuationOption | undefined> {
+  async getContinuationOption(
+    id: number,
+  ): Promise<ContinuationOption | undefined> {
     return this.continuationOptions.get(id);
   }
 
   // Character methods
   async getCharacters(storyId: number): Promise<Character[]> {
-    return Array.from(this.characters.values())
-      .filter(character => character.storyId === storyId);
+    return Array.from(this.characters.values()).filter(
+      (character) => character.storyId === storyId,
+    );
   }
 
   async getCharacter(id: number): Promise<Character | undefined> {
@@ -184,14 +199,17 @@ export class MemStorage implements IStorage {
       age: characterData.age || null,
       background: characterData.background || null,
       personality: characterData.personality || null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.characters.set(id, character);
     return character;
   }
 
   // Neue Methoden für die Baumstruktur
-  async getNextChapterByOption(parentChapterId: number, optionId: number): Promise<Chapter | undefined> {
+  async getNextChapterByOption(
+    parentChapterId: number,
+    optionId: number,
+  ): Promise<Chapter | undefined> {
     // Holt die Option
     const option = await this.getContinuationOption(optionId);
     if (!option || option.chapterId !== parentChapterId) {
@@ -199,17 +217,18 @@ export class MemStorage implements IStorage {
     }
 
     // Suche alle Kapitel, die das aktuelle Kapitel als Elternknoten haben
-    const childChapters = Array.from(this.chapters.values())
-      .filter(chapter => chapter.parentId === parentChapterId);
-    
+    const childChapters = Array.from(this.chapters.values()).filter(
+      (chapter) => chapter.parentId === parentChapterId,
+    );
+
     // Suche nach dem Kapitel, das mit dieser Option erstellt wurde
     // Wir können den Prompt vergleichen, der in beiden gespeichert ist
-    return childChapters.find(chapter => chapter.prompt === option.prompt);
+    return childChapters.find((chapter) => chapter.prompt === option.prompt);
   }
 
   async getAllChapters(storyId: number): Promise<Chapter[]> {
     return Array.from(this.chapters.values())
-      .filter(chapter => chapter.storyId === storyId)
+      .filter((chapter) => chapter.storyId === storyId)
       .sort((a, b) => {
         // Sortiere nach Pfad für eine strukturierte Darstellung
         if (a.path && b.path) {

@@ -2,7 +2,29 @@ import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const MODEL = "gpt-4o-mini";
-const CHAPTER_LENGHT_IN_WORDS = "100-200";
+
+const mapRange = (
+  value: number | undefined,
+  inMin: number,
+  inMax: number,
+  outMin: number,
+  outMax: number,
+  defaultValue: number,
+): number => {
+  if (value === undefined) return defaultValue;
+  const normalized = (value - inMin) / (inMax - inMin);
+  const mapped = normalized * (outMax - outMin) + outMin;
+  return Math.max(outMin, Math.min(outMax, mapped));
+};
+
+// Use the generic function to normalize a temperature from the range 1-9.
+const normalizeTemperature = (
+  temperature: number | undefined,
+  lower: number = 0.8,
+  upper: number = 1.2,
+): number => {
+  return mapRange(temperature, 1, 9, lower, upper, 1);
+};
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,8 +37,8 @@ export interface StoryDetails {
   setting?: string | null;
   targetAudience?: string | null;
   mainCharacter?: string | null;
-  chapterLength?: string | null;
-  temperature?: number | null;
+  chapterLength: string;  // Required and cannot be null
+  temperature: number;    // Required and cannot be null
 }
 
 export interface ChapterGeneration {
@@ -92,7 +114,7 @@ export async function generateChapter(
     prompt += `\nBitte berücksichtige folgende Anweisung für das neue Kapitel: ${customPrompt}\n`;
   }
 
-  prompt += `\nDas Kapitel sollte ${details.chapterLength || CHAPTER_LENGHT_IN_WORDS} Wörter umfassen.`;
+  prompt += `\nDas Kapitel sollte ${details.chapterLength} Wörter umfassen.`;
   prompt += `\nDu kannst selbst entscheiden, ob dieses Kapitel ein Geschichtsende sein soll. Wenn du dich für ein Ende entscheidest, setze "isEnding" auf true und generiere keine Fortsetzungsoptionen.`;
   prompt += `\nWenn es kein Ende ist, generiere 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.`;
   prompt += `\nErzähle die Geschichte ansprechend und berücksichtige alle Charaktere und die Zusammenfassung.`;
@@ -100,7 +122,7 @@ export async function generateChapter(
   prompt += `\nFormat: Antworte bitte mit einem JSON Objekt im folgenden Format:
   {
     "title": "Kapiteltitel (Nur der Titel des Kapitels, keine Nummer oder ähnliches)",
-    "content": "Der Kapitelinhalt (${details.chapterLength || CHAPTER_LENGHT_IN_WORDS} Wörter)",
+    "content": "Der Kapitelinhalt (${details.chapterLength} Wörter)",
     "summary": "Eine Zusammenfassung der gesamten Geschichte bis zu diesem Punkt (60-80 Wörter)",
     "isEnding": false,
     "continuationOptions": [
@@ -125,19 +147,14 @@ export async function generateChapter(
   Falls du entscheidest, dass dies das Ende der Geschichte sein soll:
   {
     "title": "Kapiteltitel",
-    "content": "Der Kapitelinhalt, der die Geschichte zu einem befriedigenden Abschluss bringt (${details.chapterLength || CHAPTER_LENGHT_IN_WORDS} Wörter)",
+    "content": "Der Kapitelinhalt, der die Geschichte zu einem befriedigenden Abschluss bringt (${details.chapterLength} Wörter)",
     "summary": "Eine abschließende Zusammenfassung der gesamten Geschichte (60-80 Wörter)",
     "isEnding": true,
     "continuationOptions": []
   }`;
 
   try {
-    const temperature = details.temperature
-      ? Math.max(
-          0.7,
-          Math.min(1.3, ((details.temperature - 1) / 8) * 0.6 + 0.7),
-        )
-      : 1;
+    const temperature = normalizeTemperature(details.temperature);
 
     const response = await openai.chat.completions.create({
       model: MODEL,
@@ -185,18 +202,25 @@ export interface StoryDetailsWithCharacters extends StoryDetails {
 export async function generateRandomStoryDetails(
   partialDetails: StoryDetailsWithCharacters,
 ): Promise<StoryDetailsWithCharacters> {
+  // Ensure that chapterLength and temperature have default values
+  const safeDetails = {
+    ...partialDetails,
+    chapterLength: partialDetails.chapterLength || "100-200",
+    temperature: partialDetails.temperature ?? 5,
+  };
+
   // Don't make an API call if all fields are provided and at least one character
   if (
-    partialDetails.title &&
-    partialDetails.genre &&
-    partialDetails.narrativeStyle &&
-    partialDetails.setting &&
-    partialDetails.targetAudience &&
-    partialDetails.mainCharacter &&
-    partialDetails.characters &&
-    partialDetails.characters.length > 0
+    safeDetails.title &&
+    safeDetails.genre &&
+    safeDetails.narrativeStyle &&
+    safeDetails.setting &&
+    safeDetails.targetAudience &&
+    safeDetails.mainCharacter &&
+    safeDetails.characters &&
+    safeDetails.characters.length > 0
   ) {
-    return partialDetails;
+    return safeDetails;
   }
 
   const prompt = `Generiere zufällige Details für eine deutsche Geschichte. Fülle nur die fehlenden Felder aus:
@@ -227,12 +251,8 @@ ${
 Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits angegebenen als auch die generierten).`;
 
   try {
-    const temperature = partialDetails.temperature
-      ? Math.max(
-          0.7,
-          Math.min(1.3, ((partialDetails.temperature - 1) / 9) * 0.6 + 0.7),
-        )
-      : 1;
+    const temperature = normalizeTemperature(partialDetails.temperature);
+
     const response = await openai.chat.completions.create({
       model: MODEL,
       messages: [
@@ -258,7 +278,11 @@ Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits ang
     return JSON.parse(content) as StoryDetailsWithCharacters;
   } catch (error) {
     console.error("Error generating random story details:", error);
-    // In case of an error, return the original details and let the client handle missing fields
-    return partialDetails;
+    // In case of an error, return the original details with safety defaults
+    return {
+      ...partialDetails,
+      chapterLength: partialDetails.chapterLength || "100-200",
+      temperature: partialDetails.temperature ?? 5,
+    };
   }
 }

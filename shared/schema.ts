@@ -21,8 +21,8 @@ export const stories = pgTable("stories", {
   setting: text("setting"),
   targetAudience: text("target_audience"),
   mainCharacter: text("main_character"),
-  chapterLength: text("chapter_length").default("100-200"),
-  temperature: integer("temperature").default(5),
+  chapterLength: text("chapter_length").default("100-200").notNull(),
+  temperature: integer("temperature").default(5).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -106,16 +106,20 @@ export const createStorySchema = z.object({
   setting: z.string().optional(),
   targetAudience: z.string().optional(),
   mainCharacter: z.string().optional(),
-  chapterLength: z.enum(["100-200", "200-300", "300-400"]).optional().default("100-200"),
-  temperature: z.number().int().min(1).max(9).optional().default(5),
-  characters: z.array(
-    z.object({
-      name: z.string(),
-      age: z.string().optional(),
-      background: z.string().optional(),
-      personality: z.string().optional(),
-    })
-  ).optional(),
+  chapterLength: z
+    .enum(["100-200", "200-300", "300-400"])
+    .default("100-200"),
+  temperature: z.number().int().min(1).max(9).default(5),
+  characters: z
+    .array(
+      z.object({
+        name: z.string(),
+        age: z.string().optional(),
+        background: z.string().optional(),
+        personality: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const createCharacterSchema = z.object({

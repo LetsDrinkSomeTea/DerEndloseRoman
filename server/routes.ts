@@ -65,8 +65,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = createStorySchema.parse(req.body);
 
+      // Ensure default values are set for chapterLength and temperature
+      const chapterLength = validatedData.chapterLength || "100-200";
+      const temperature = validatedData.temperature ?? 5;
+
       // Use OpenAI to fill in missing details including characters
-      const completeDetails = await generateRandomStoryDetails(validatedData);
+      const completeDetails = await generateRandomStoryDetails({
+        ...validatedData,
+        chapterLength,
+        temperature,
+      });
 
       // Create the story in storage
       const story = await storage.createStory({
@@ -76,8 +84,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         setting: completeDetails.setting,
         targetAudience: completeDetails.targetAudience,
         mainCharacter: completeDetails.mainCharacter,
-        chapterLength: validatedData.chapterLength,
-        temperature: validatedData.temperature,
+        chapterLength,
+        temperature,
       });
 
       // Create characters if they exist

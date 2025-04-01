@@ -254,8 +254,7 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
               className="font-serif text-neutral-900 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: currentChapter.content }}
             />
-
-            {currentChapter.isEnding && (
+            {currentChapter.isEnding ? (
               <div className="mt-6 p-4 bg-primary/10 rounded-lg border border-primary/20 text-center">
                 <h3 className="font-bold text-lg mb-2 text-primary">
                   Ende der Geschichte
@@ -265,6 +264,8 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
                   anderen Pfad erkunden.
                 </p>
               </div>
+            ) : (
+              ""
             )}
           </CardContent>
         </Card>
