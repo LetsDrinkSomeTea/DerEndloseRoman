@@ -2,15 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Story } from "@/lib/types";
 import StoryReader from "@/components/StoryReader";
-import CharacterDialog from "@/components/CharacterDialog";
+import StoryCover from "@/components/StoryCover";
 import { Button } from "@/components/ui/button";
-import { UserRound } from "lucide-react";
+import { BookOpen, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function StoryView() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [showCover, setShowCover] = useState(true);
   
   const { data: story, isLoading, error } = useQuery<Story>({
     queryKey: [`/api/stories/${id}`]
@@ -53,22 +55,45 @@ export default function StoryView() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">GeschichtenWelt</h1>
           <div className="flex gap-2">
-            <CharacterDialog 
-              storyId={parseInt(id)}
-              trigger={
-                <Button variant="secondary" size="sm">
-                  <UserRound className="mr-2 h-4 w-4" />
-                  Charaktere
-                </Button>
-              }
-            />
+            <Button 
+              variant="secondary" 
+              size="sm"
+              onClick={() => setShowCover(!showCover)}
+            >
+              {showCover ? (
+                <>
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Lesen
+                </>
+              ) : (
+                <>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Zur Übersicht
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleBack}
+              className="bg-white/20 hover:bg-white/30"
+            >
+              Zurück
+            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <StoryReader story={story} onBack={handleBack} />
+        {showCover ? (
+          <StoryCover 
+            story={story} 
+            onStartReading={() => setShowCover(false)}
+          />
+        ) : (
+          <StoryReader story={story} onBack={() => setShowCover(true)} />
+        )}
       </main>
     </div>
   );

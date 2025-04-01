@@ -70,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         setting: completeDetails.setting,
         targetAudience: completeDetails.targetAudience,
         mainCharacter: completeDetails.mainCharacter,
-        chapterLength: completeDetails.chapterLength || "100-150",
+        chapterLength: completeDetails.chapterLength || "100-200",
         temperature: completeDetails.temperature || 7
       });
       

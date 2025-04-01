@@ -49,7 +49,7 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
     setting: "",
     targetAudience: "",
     mainCharacter: "",
-    chapterLength: "100-150",
+    chapterLength: "100-200",
     temperature: 7,
     characters: []
   });
@@ -78,7 +78,7 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setStoryData({
       ...storyData,
@@ -148,7 +148,7 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
         setting: "",
         targetAudience: "",
         mainCharacter: "",
-        chapterLength: "100-150",
+        chapterLength: "100-200",
         temperature: 7,
         characters: []
       });
@@ -276,7 +276,7 @@ export default function CreateStoryModal({ open, onOpenChange }: CreateStoryModa
                     onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border border-neutral-300 bg-white py-2 px-3 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
                   >
-                    <option value="100-150">Kurz (100-150 Wörter)</option>
+                    <option value="100-200">Kurz (100-150 Wörter)</option>
                     <option value="200-300">Mittel (200-300 Wörter)</option>
                     <option value="300-400">Lang (300-400 Wörter)</option>
                   </select>

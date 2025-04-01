@@ -132,11 +132,10 @@ export async function generateChapter(
   }`;
 
   try {
-    // Temperatur zwischen 0 und 1 normalisieren (von 1-10 auf 0.1-1)
-    const temperature = details.temperature 
-      ? Math.max(0.1, Math.min(1, details.temperature / 10)) 
-      : 0.7;
-    
+    const temperature = details.temperature
+      ? Math.max(0.5, Math.min(1.5, (details.temperature - 1) / 9 + 0.5))
+      : 1;
+
     const response = await openai.chat.completions.create({
       model: MODEL,
       messages: [
