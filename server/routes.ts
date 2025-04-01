@@ -34,7 +34,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const rootChapter = await storage.getRootChapter(storyId);
       
-      res.json({ ...story, rootChapter });
+      if (rootChapter) {
+        const continuationOptions = await storage.getContinuationOptions(rootChapter.id);
+        res.json({ 
+          ...story, 
+          rootChapter: { 
+            ...rootChapter, 
+            continuationOptions 
+          } 
+        });
+      } else {
+        res.json(story);
+      }
     } catch (error) {
       console.error("Error fetching story:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Geschichte." });
