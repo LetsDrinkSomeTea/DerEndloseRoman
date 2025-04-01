@@ -73,6 +73,13 @@ export async function generateChapter(
   chapterContext?: ChapterContext,
   customPrompt?: string,
 ): Promise<ChapterGeneration> {
+  // Ensure that chapterLength and temperature are set to default values if they are undefined
+  const safeDetails = {
+    ...details,
+    chapterLength: details.chapterLength || "100-200",
+    temperature: details.temperature ?? 5,
+  };
+
   // Building the base prompt
   let prompt = `Generiere ein Kapitel für eine deutsche Geschichte mit folgenden Details:\n`;
 
@@ -114,7 +121,7 @@ export async function generateChapter(
     prompt += `\nBitte berücksichtige folgende Anweisung für das neue Kapitel: ${customPrompt}\n`;
   }
 
-  prompt += `\nDas Kapitel sollte ${details.chapterLength} Wörter umfassen.`;
+  prompt += `\nDas Kapitel sollte ${safeDetails.chapterLength} Wörter umfassen.`;
   prompt += `\nDu kannst selbst entscheiden, ob dieses Kapitel ein Geschichtsende sein soll. Wenn du dich für ein Ende entscheidest, setze "isEnding" auf true und generiere keine Fortsetzungsoptionen.`;
   prompt += `\nWenn es kein Ende ist, generiere 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.`;
   prompt += `\nErzähle die Geschichte ansprechend und berücksichtige alle Charaktere und die Zusammenfassung.`;
@@ -122,7 +129,7 @@ export async function generateChapter(
   prompt += `\nFormat: Antworte bitte mit einem JSON Objekt im folgenden Format:
   {
     "title": "Kapiteltitel (Nur der Titel des Kapitels, keine Nummer oder ähnliches)",
-    "content": "Der Kapitelinhalt (${details.chapterLength} Wörter)",
+    "content": "Der Kapitelinhalt (${safeDetails.chapterLength} Wörter)",
     "summary": "Eine Zusammenfassung der gesamten Geschichte bis zu diesem Punkt (60-80 Wörter)",
     "isEnding": false,
     "continuationOptions": [
@@ -147,14 +154,14 @@ export async function generateChapter(
   Falls du entscheidest, dass dies das Ende der Geschichte sein soll:
   {
     "title": "Kapiteltitel",
-    "content": "Der Kapitelinhalt, der die Geschichte zu einem befriedigenden Abschluss bringt (${details.chapterLength} Wörter)",
+    "content": "Der Kapitelinhalt, der die Geschichte zu einem befriedigenden Abschluss bringt (${safeDetails.chapterLength} Wörter)",
     "summary": "Eine abschließende Zusammenfassung der gesamten Geschichte (60-80 Wörter)",
     "isEnding": true,
     "continuationOptions": []
   }`;
 
   try {
-    const temperature = normalizeTemperature(details.temperature);
+    const temperature = normalizeTemperature(safeDetails.temperature);
 
     const response = await openai.chat.completions.create({
       model: MODEL,
