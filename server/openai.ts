@@ -135,7 +135,7 @@ export async function generateChapter(
     const temperature = details.temperature
       ? Math.max(
           0.7,
-          Math.min(1.3, ((details.temperature - 1) / 9) * 0.6 + 0.7),
+          Math.min(1.3, ((details.temperature - 1) / 8) * 0.6 + 0.7),
         )
       : 1;
 

@@ -333,7 +333,7 @@ export default function CreateStoryModal({
                       id="temperature"
                       name="temperature"
                       min="1"
-                      max="10"
+                      max="9"
                       step="1"
                       value={storyData.temperature}
                       onChange={(e) =>

@@ -116,7 +116,7 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
                       <div className="flex-grow h-1.5 bg-neutral-200 rounded-full">
                         <div
                           className="h-full bg-primary rounded-full"
-                          style={{ width: `${(story.temperature || 5) * 10}%` }}
+                          style={{ width: `${((story.temperature || 5) / 9) * 100}%` }}
                         />
                       </div>
                       <span className="text-xs text-neutral-600 ml-2">10</span>
