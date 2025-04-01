@@ -1,7 +1,9 @@
 import { Story, Chapter } from "@/lib/types";
 import ChapterNavigation from "./ChapterNavigation";
+import ChapterTree from "./ChapterTree";
 import ContinuationOptions from "./ContinuationOptions";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -22,6 +24,19 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
   const [chapterPath, setChapterPath] = useState<Chapter[]>([]);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [customPrompt, setCustomPrompt] = useState("");
+  const [navTab, setNavTab] = useState<string>("path"); // "path" oder "tree"
+
+  // Fetch all chapters for the tree view
+  const { data: allChapters = [] } = useQuery({
+    queryKey: ["/api/stories", story.id, "chapters"],
+    queryFn: async () => {
+      const response = await fetch(`/api/stories/${story.id}/chapters`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch all chapters");
+      }
+      return response.json();
+    },
+  });
 
   // Fetch chapter path when current chapter changes
   const { data: pathData } = useQuery({
@@ -76,9 +91,14 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
     },
     onSuccess: (data) => {
       if (data) {
+        // Invalidiere Kapitelbaum und Pfad
         queryClient.invalidateQueries({
           queryKey: ["/api/chapters", data.id, "path"],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["/api/stories", story.id, "chapters"],
+        });
+        
         setCurrentChapter(data);
         setSelectedOptionId(null);
         setCustomPrompt("");
@@ -138,17 +158,45 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
   // Calculate chapter depth (for display purposes)
   const chapterDepth = chapterPath.length + 1;
 
+  const handleChapterSelect = (chapterId: number) => {
+    const chapter = allChapters.find(ch => ch.id === chapterId);
+    if (chapter) {
+      handleSelectChapter(chapter);
+    }
+  };
+
   return (
     <div className="md:flex gap-8">
       {/* Chapter Navigation Sidebar */}
       <div className="md:w-1/3 lg:w-1/4">
-        <ChapterNavigation
-          rootChapter={story.rootChapter}
-          currentChapter={currentChapter}
-          chapterPath={chapterPath}
-          onChapterSelect={handleSelectChapter}
-          onBack={onBack}
-        />
+        <Card className="p-4 mb-4">
+          <Tabs value={navTab} onValueChange={setNavTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-2">
+              <TabsTrigger value="path">Pfad</TabsTrigger>
+              <TabsTrigger value="tree">Baum</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="path">
+              <ChapterNavigation
+                rootChapter={story.rootChapter}
+                currentChapter={currentChapter}
+                chapterPath={chapterPath}
+                onChapterSelect={handleSelectChapter}
+                onBack={onBack}
+              />
+            </TabsContent>
+            
+            <TabsContent value="tree">
+              {allChapters.length > 0 && (
+                <ChapterTree
+                  chapters={allChapters}
+                  currentChapter={currentChapter}
+                  onSelectChapter={handleChapterSelect}
+                />
+              )}
+            </TabsContent>
+          </Tabs>
+        </Card>
       </div>
 
       {/* Story Content */}
@@ -173,7 +221,7 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
                   )}
                 </div>
               </div>
-              <span className="bg-primary bg-opacity-10 text-white px-3 py-1 rounded-md text-sm font-medium">
+              <span className="bg-primary/10 text-primary px-3 py-1 rounded-md text-sm font-medium">
                 Kapitel {chapterDepth}
               </span>
             </div>

@@ -21,6 +21,8 @@ export interface IStorage {
   getRootChapter(storyId: number): Promise<Chapter | undefined>;
   getChapterPath(chapterId: number): Promise<Chapter[]>;
   createChapter(chapter: InsertChapter): Promise<Chapter>;
+  getNextChapterByOption(parentChapterId: number, optionId: number): Promise<Chapter | undefined>;
+  getAllChapters(storyId: number): Promise<Chapter[]>;
   
   // Character methods
   getCharacters(storyId: number): Promise<Character[]>;
@@ -182,6 +184,35 @@ export class MemStorage implements IStorage {
     };
     this.characters.set(id, character);
     return character;
+  }
+
+  // Neue Methoden für die Baumstruktur
+  async getNextChapterByOption(parentChapterId: number, optionId: number): Promise<Chapter | undefined> {
+    // Holt die Option
+    const option = await this.getContinuationOption(optionId);
+    if (!option || option.chapterId !== parentChapterId) {
+      return undefined;
+    }
+
+    // Suche alle Kapitel, die das aktuelle Kapitel als Elternknoten haben
+    const childChapters = Array.from(this.chapters.values())
+      .filter(chapter => chapter.parentId === parentChapterId);
+    
+    // Suche nach dem Kapitel, das mit dieser Option erstellt wurde
+    // Wir können den Prompt vergleichen, der in beiden gespeichert ist
+    return childChapters.find(chapter => chapter.prompt === option.prompt);
+  }
+
+  async getAllChapters(storyId: number): Promise<Chapter[]> {
+    return Array.from(this.chapters.values())
+      .filter(chapter => chapter.storyId === storyId)
+      .sort((a, b) => {
+        // Sortiere nach Pfad für eine strukturierte Darstellung
+        if (a.path && b.path) {
+          return a.path.localeCompare(b.path);
+        }
+        return a.id - b.id;
+      });
   }
 }
 

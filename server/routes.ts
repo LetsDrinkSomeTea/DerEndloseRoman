@@ -190,20 +190,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kapitel nicht gefunden." });
       }
       
-      // Check if a chapter with this path already exists
       let prompt = customPrompt;
-      let nextChapterTitle = "Benutzerdefinierte Fortsetzung";
+      let existingChapter: Chapter | undefined;
       
       if (selectedOptionId) {
         const option = await storage.getContinuationOption(selectedOptionId);
         if (!option) {
           return res.status(404).json({ message: "Fortsetzungsoption nicht gefunden." });
         }
+        
         prompt = option.prompt;
-        nextChapterTitle = option.title;
+        
+        // Prüfe, ob bereits ein Kapitel für diese Option existiert
+        existingChapter = await storage.getNextChapterByOption(chapterId, selectedOptionId);
+        
+        if (existingChapter) {
+          // Wenn ja, gib dieses zurück, anstatt ein neues zu erstellen
+          return res.status(200).json({
+            ...existingChapter,
+            continuationOptions: await storage.getContinuationOptions(existingChapter.id)
+          });
+        }
       }
 
-      // Generate the next chapter
+      // Kein existierendes Kapitel gefunden, generiere ein neues
       const storyDetails = {
         title: story.title,
         genre: story.genre,
@@ -327,6 +337,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(500).json({ message: "Fehler beim Erstellen des Charakters." });
+    }
+  });
+  
+  // Get all chapters for a story (tree structure)
+  app.get("/api/stories/:id/chapters", async (req: Request, res: Response) => {
+    try {
+      const storyId = parseInt(req.params.id);
+      
+      // Check if the story exists
+      const story = await storage.getStory(storyId);
+      if (!story) {
+        return res.status(404).json({ message: "Geschichte nicht gefunden." });
+      }
+      
+      const chapters = await storage.getAllChapters(storyId);
+      res.json(chapters);
+    } catch (error) {
+      console.error("Error fetching all chapters:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen aller Kapitel." });
     }
   });
 

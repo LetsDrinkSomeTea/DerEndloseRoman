@@ -3,8 +3,8 @@ import OpenAI from "openai";
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const MODEL = "gpt-4o-mini";
 
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export interface StoryDetails {
@@ -32,27 +32,30 @@ export interface ChapterGeneration {
 export async function generateChapter(
   details: StoryDetails,
   previousChapter?: { content: string; title: string },
-  customPrompt?: string
+  customPrompt?: string,
 ): Promise<ChapterGeneration> {
   // Building the base prompt
   let prompt = `Generiere ein Kapitel für eine deutsche Geschichte mit folgenden Details:\n`;
-  
+
   if (details.title) prompt += `Titel: ${details.title}\n`;
   if (details.genre) prompt += `Genre: ${details.genre}\n`;
-  if (details.narrativeStyle) prompt += `Erzählstil: ${details.narrativeStyle}\n`;
+  if (details.narrativeStyle)
+    prompt += `Erzählstil: ${details.narrativeStyle}\n`;
   if (details.setting) prompt += `Setting: ${details.setting}\n`;
-  if (details.targetAudience) prompt += `Zielgruppe: ${details.targetAudience}\n`;
-  if (details.mainCharacter) prompt += `Hauptcharakter: ${details.mainCharacter}\n`;
-  
+  if (details.targetAudience)
+    prompt += `Zielgruppe: ${details.targetAudience}\n`;
+  if (details.mainCharacter)
+    prompt += `Hauptcharakter: ${details.mainCharacter}\n`;
+
   if (previousChapter) {
     prompt += `\nVorheriges Kapitel Titel: ${previousChapter.title}\n`;
     prompt += `Vorheriges Kapitel Inhalt: ${previousChapter.content}\n`;
   }
-  
+
   if (customPrompt) {
     prompt += `\nBitte berücksichtige folgende Anweisung für das neue Kapitel: ${customPrompt}\n`;
   }
-  
+
   prompt += `\nDas Kapitel sollte 100-150 Wörter umfassen. Generiere auch 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.`;
   prompt += `\nFormat: Antworte bitte mit einem JSON Objekt im folgenden Format:
   {
@@ -83,14 +86,15 @@ export async function generateChapter(
       messages: [
         {
           role: "system",
-          content: "Du bist ein kreativer Geschichtenerzähler, der fesselnde deutsche Geschichten schreibt."
+          content:
+            "Du bist ein kreativer Geschichtenerzähler, der fesselnde deutsche Geschichten schreibt.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
     });
 
     const content = response.choices[0].message.content;
@@ -119,7 +123,9 @@ export interface StoryDetailsWithCharacters extends StoryDetails {
 /**
  * Generate random story details for empty fields
  */
-export async function generateRandomStoryDetails(partialDetails: StoryDetailsWithCharacters): Promise<StoryDetailsWithCharacters> {
+export async function generateRandomStoryDetails(
+  partialDetails: StoryDetailsWithCharacters,
+): Promise<StoryDetailsWithCharacters> {
   // Don't make an API call if all fields are provided and at least one character
   if (
     partialDetails.title &&
@@ -128,7 +134,7 @@ export async function generateRandomStoryDetails(partialDetails: StoryDetailsWit
     partialDetails.setting &&
     partialDetails.targetAudience &&
     partialDetails.mainCharacter &&
-    partialDetails.characters && 
+    partialDetails.characters &&
     partialDetails.characters.length > 0
   ) {
     return partialDetails;
@@ -136,12 +142,12 @@ export async function generateRandomStoryDetails(partialDetails: StoryDetailsWit
 
   const prompt = `Generiere zufällige Details für eine deutsche Geschichte. Fülle nur die fehlenden Felder aus:
   
-${partialDetails.title ? `title: ${partialDetails.title} (bereits angegeben)` : 'title: [FEHLT]'}
-${partialDetails.genre ? `genre: ${partialDetails.genre} (bereits angegeben)` : 'genre: [FEHLT]'}
-${partialDetails.narrativeStyle ? `narrativeStyle: ${partialDetails.narrativeStyle} (bereits angegeben)` : 'narrativeStyle: [FEHLT]'}
-${partialDetails.setting ? `setting: ${partialDetails.setting} (bereits angegeben)` : 'setting: [FEHLT]'}
-${partialDetails.targetAudience ? `targetAudience: ${partialDetails.targetAudience} (bereits angegeben)` : 'targetAudience: [FEHLT]'}
-${partialDetails.mainCharacter ? `mainCharacter: ${partialDetails.mainCharacter} (bereits angegeben)` : 'mainCharacter: [FEHLT]'}
+${partialDetails.title ? `title: ${partialDetails.title} (bereits angegeben)` : "title: [FEHLT]"}
+${partialDetails.genre ? `genre: ${partialDetails.genre} (bereits angegeben)` : "genre: [FEHLT]"}
+${partialDetails.narrativeStyle ? `narrativeStyle: ${partialDetails.narrativeStyle} (bereits angegeben)` : "narrativeStyle: [FEHLT]"}
+${partialDetails.setting ? `setting: ${partialDetails.setting} (bereits angegeben)` : "setting: [FEHLT]"}
+${partialDetails.targetAudience ? `targetAudience: ${partialDetails.targetAudience} (bereits angegeben)` : "targetAudience: [FEHLT]"}
+${partialDetails.mainCharacter ? `mainCharacter: ${partialDetails.mainCharacter} (bereits angegeben)` : "mainCharacter: [FEHLT]"}
 
 Außerdem generiere mindestens einen Hauptcharakter für die Geschichte mit folgendem Format:
 "characters": [
@@ -153,9 +159,10 @@ Außerdem generiere mindestens einen Hauptcharakter für die Geschichte mit folg
   }
 ]
 
-${partialDetails.characters && partialDetails.characters.length > 0 ? 
-  `characters: ${JSON.stringify(partialDetails.characters, null, 2)} (bereits angegeben)` : 
-  'characters: [FEHLT]'
+${
+  partialDetails.characters && partialDetails.characters.length > 0
+    ? `characters: ${JSON.stringify(partialDetails.characters, null, 2)} (bereits angegeben)`
+    : "characters: [FEHLT]"
 }
 
 Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits angegebenen als auch die generierten).`;
@@ -166,14 +173,15 @@ Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits ang
       messages: [
         {
           role: "system",
-          content: "Du hilfst dabei, kreative und abwechslungsreiche Geschichtendetails und Charaktere zu generieren."
+          content:
+            "Du hilfst dabei, kreative und abwechslungsreiche Geschichtendetails und Charaktere zu generieren.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
     });
 
     const content = response.choices[0].message.content;
