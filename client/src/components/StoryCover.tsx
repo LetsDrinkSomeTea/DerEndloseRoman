@@ -2,7 +2,6 @@ import { Story, Character } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Book, Users, Settings, Thermometer, AlignLeft } from "lucide-react";
 import { Button } from "./ui/button";
@@ -12,12 +11,66 @@ interface StoryCoverProps {
   onStartReading: () => void;
 }
 
+// Eine sichere Komponente für Charakterdarstellung
+function CharacterCard({ character }: { character: any }) {
+  // Stelle sicher, dass alle Eigenschaften gültige Werte haben
+  const name = typeof character.name === 'string' ? character.name : 'Unbekannt';
+  const age = typeof character.age === 'string' ? character.age : null;
+  const personality = typeof character.personality === 'string' ? character.personality : null;
+  const background = typeof character.background === 'string' ? character.background : null;
+  
+  return (
+    <div className="border rounded-md p-3">
+      <h3 className="font-medium">{name}</h3>
+      {age && (
+        <p className="text-sm text-gray-500 mt-1">
+          Alter: {age}
+        </p>
+      )}
+      {personality && (
+        <p className="text-sm mt-2">
+          <span className="font-medium">Persönlichkeit:</span>{" "}
+          {personality}
+        </p>
+      )}
+      {background && (
+        <p className="text-sm mt-2">
+          <span className="font-medium">Hintergrund:</span>{" "}
+          {background}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
   // Lade Charaktere für die Geschichte
   const { data: characters = [] } = useQuery<Character[]>({
     queryKey: [`/api/stories/${story.id}/characters`],
     enabled: !!story.id,
   });
+
+  // Formatiere das Erstellungsdatum
+  const formattedDate = (() => {
+    try {
+      return story.createdAt 
+        ? new Date(story.createdAt as unknown as string).toLocaleDateString("de-DE") 
+        : "unbekannt";
+    } catch (e) {
+      return "unbekannt";
+    }
+  })();
+
+  // Kapitelllänge formatieren
+  const formatChapterLength = (length?: string) => {
+    if (!length) return "";
+    switch (length) {
+      case "100-200": return "Kurz (100-200 Wörter)";
+      case "200-300": return "Mittel (200-300 Wörter)";
+      case "300-400": return "Lang (300-400 Wörter)";
+      default: return length;
+    }
+  };
 
   return (
     <div className="flex flex-col space-y-6">
@@ -27,12 +80,7 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
           {story.title}
         </h1>
         <p className="text-gray-500 mt-2">
-          Erstellt am{" "}
-          {story.createdAt
-            ? new Date(story.createdAt as unknown as string).toLocaleDateString(
-                "de-DE",
-              )
-            : "unbekannt"}
+          Erstellt am {formattedDate}
         </p>
       </div>
 
@@ -95,12 +143,7 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
                       Kapitellänge
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      {story.chapterLength === "100-200" &&
-                        "Kurz (100-200 Wörter)"}
-                      {story.chapterLength === "200-300" &&
-                        "Mittel (200-300 Wörter)"}
-                      {story.chapterLength === "300-400" &&
-                        "Lang (300-400 Wörter)"}
+                      {formatChapterLength(story.chapterLength)}
                     </p>
                   </div>
                 )}
@@ -139,28 +182,9 @@ export default function StoryCover({ story, onStartReading }: StoryCoverProps) {
           <CardContent>
             <ScrollArea className="h-[300px] rounded-md">
               <div className="space-y-4">
-                {characters && characters.length > 0 ? (
-                  characters.map((character: Character) => (
-                    <div key={character.id} className="border rounded-md p-3">
-                      <h3 className="font-medium">{character.name}</h3>
-                      {character.age && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          Alter: {character.age}
-                        </p>
-                      )}
-                      {character.personality && (
-                        <p className="text-sm mt-2">
-                          <span className="font-medium">Persönlichkeit:</span>{" "}
-                          {character.personality}
-                        </p>
-                      )}
-                      {character.background && (
-                        <p className="text-sm mt-2">
-                          <span className="font-medium">Hintergrund:</span>{" "}
-                          {character.background}
-                        </p>
-                      )}
-                    </div>
+                {Array.isArray(characters) && characters.length > 0 ? (
+                  characters.map((character) => (
+                    <CharacterCard key={character.id || Math.random()} character={character} />
                   ))
                 ) : (
                   <p className="text-sm text-gray-500">
