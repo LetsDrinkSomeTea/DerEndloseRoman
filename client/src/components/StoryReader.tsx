@@ -187,9 +187,9 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
   };
 
   return (
-    <div className="md:flex gap-8">
+    <div className="flex flex-col-reverse md:flex-row gap-8">
       {/* Chapter Navigation Sidebar */}
-      <div className="md:w-1/3 lg:w-1/4">
+      <div className="md:w-1/3 lg:w-1/4 w-full">
         <Card className="p-4 mb-4">
           <Tabs value={navTab} onValueChange={setNavTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-2">
@@ -221,7 +221,7 @@ export default function StoryReader({ story, onBack }: StoryReaderProps) {
       </div>
 
       {/* Story Content */}
-      <div className="md:w-2/3 lg:w-3/4">
+      <div className="md:w-2/3 lg:w-3/4 w-full">
         <Card className="bg-white rounded-lg shadow-md p-6 mb-6">
           <CardContent className="p-0">
             <div className="flex justify-between items-start mb-4">
