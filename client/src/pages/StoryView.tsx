@@ -5,13 +5,11 @@ import StoryReader from "@/components/StoryReader";
 import StoryCover from "@/components/StoryCover";
 import { Button } from "@/components/ui/button";
 import { BookOpen, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
 export default function StoryView() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const [showCover, setShowCover] = useState(true);
 
   const {
@@ -61,7 +59,7 @@ export default function StoryView() {
             className="text-2xl font-bold cursor-pointer"
             onClick={() => navigate("/")}
           >
-            GeschichtenWelt
+            Der endlose Roman
           </h1>
           <div className="flex gap-2">
             <Button

@@ -209,25 +209,19 @@ export interface StoryDetailsWithCharacters extends StoryDetails {
 export async function generateRandomStoryDetails(
   partialDetails: StoryDetailsWithCharacters,
 ): Promise<StoryDetailsWithCharacters> {
-  // Ensure that chapterLength and temperature have default values
-  const safeDetails = {
-    ...partialDetails,
-    chapterLength: partialDetails.chapterLength || "100-200",
-    temperature: partialDetails.temperature ?? 5,
-  };
 
   // Don't make an API call if all fields are provided and at least one character
   if (
-    safeDetails.title &&
-    safeDetails.genre &&
-    safeDetails.narrativeStyle &&
-    safeDetails.setting &&
-    safeDetails.targetAudience &&
-    safeDetails.mainCharacter &&
-    safeDetails.characters &&
-    safeDetails.characters.length > 0
+      partialDetails.title &&
+      partialDetails.genre &&
+      partialDetails.narrativeStyle &&
+      partialDetails.setting &&
+      partialDetails.targetAudience &&
+      partialDetails.mainCharacter &&
+      partialDetails.characters &&
+      partialDetails.characters.length > 0
   ) {
-    return safeDetails;
+    return partialDetails;
   }
 
   const prompt = `Generiere zufällige Details für eine deutsche Geschichte. Fülle nur die fehlenden Felder aus:
@@ -286,10 +280,6 @@ Antworte mit einem JSON-Objekt, das ALLE Felder enthält (sowohl die bereits ang
   } catch (error) {
     console.error("Error generating random story details:", error);
     // In case of an error, return the original details with safety defaults
-    return {
-      ...partialDetails,
-      chapterLength: partialDetails.chapterLength || "100-200",
-      temperature: partialDetails.temperature ?? 5,
-    };
+    return partialDetails;
   }
 }

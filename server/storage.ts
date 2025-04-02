@@ -1,3 +1,6 @@
+import 'dotenv/config';
+import db from './db';
+import { eq, and, desc } from 'drizzle-orm';
 import {
   type Story,
   type InsertStory,
@@ -7,7 +10,11 @@ import {
   type InsertCharacter,
   type ContinuationOption,
   type InsertContinuationOption,
-} from "@shared/schema";
+  stories,
+  chapters,
+  characters,
+  continuationOptions,
+} from '@shared/schema';
 
 export interface IStorage {
   // Story methods
@@ -40,203 +47,190 @@ export interface IStorage {
   getContinuationOption(id: number): Promise<ContinuationOption | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private stories: Map<number, Story>;
-  private chapters: Map<number, Chapter>;
-  private characters: Map<number, Character>;
-  private continuationOptions: Map<number, ContinuationOption>;
-  private storyIdCounter: number;
-  private chapterIdCounter: number;
-  private characterIdCounter: number;
-  private optionIdCounter: number;
+export class DrizzleStorage implements IStorage {
+  private db = db;
 
-  constructor() {
-    this.stories = new Map();
-    this.chapters = new Map();
-    this.characters = new Map();
-    this.continuationOptions = new Map();
-    this.storyIdCounter = 1;
-    this.chapterIdCounter = 1;
-    this.characterIdCounter = 1;
-    this.optionIdCounter = 1;
-  }
-
-  // Story methods
+  // Story-Methoden
   async getStories(): Promise<Story[]> {
-    return Array.from(this.stories.values()).sort((a, b) => b.id - a.id);
+    const result = await this.db
+        .select()
+        .from(stories)
+        .orderBy(desc(stories.id));
+    return result as Story[];
   }
 
   async getStory(id: number): Promise<Story | undefined> {
-    return this.stories.get(id);
+    const result = await this.db
+        .select()
+        .from(stories)
+        .where(eq(stories.id, id));
+    return result[0] as Story | undefined;
   }
 
   async createStory(storyData: InsertStory): Promise<Story> {
-    const id = this.storyIdCounter++;
-    const story: Story = {
-      id,
+    const [newStory] = await this.db.insert(stories).values({
       title: storyData.title || null,
       genre: storyData.genre || null,
       narrativeStyle: storyData.narrativeStyle || null,
       setting: storyData.setting || null,
       targetAudience: storyData.targetAudience || null,
       mainCharacter: storyData.mainCharacter || null,
-      chapterLength: storyData.chapterLength || "100-200",
+      chapterLength: storyData.chapterLength || '100-200',
       temperature: storyData.temperature || 5,
       createdAt: new Date(),
-    };
-    this.stories.set(id, story);
-    return story;
+    }).returning();
+    return newStory as Story;
   }
 
-  // Chapter methods
+  // Chapter-Methoden
   async getChapter(id: number): Promise<Chapter | undefined> {
-    return this.chapters.get(id);
+    const result = await this.db
+        .select()
+        .from(chapters)
+        .where(eq(chapters.id, id));
+    return result[0] as Chapter | undefined;
   }
 
   async getChaptersByStoryId(storyId: number): Promise<Chapter[]> {
-    return Array.from(this.chapters.values()).filter(
-      (chapter) => chapter.storyId === storyId,
-    );
+    const result = await this.db
+        .select()
+        .from(chapters)
+        .where(eq(chapters.storyId, storyId));
+    return result as Chapter[];
   }
 
   async getRootChapter(storyId: number): Promise<Chapter | undefined> {
-    return Array.from(this.chapters.values()).find(
-      (chapter) => chapter.storyId === storyId && chapter.isRoot === 1,
-    );
+    const result = await this.db
+        .select()
+        .from(chapters)
+        .where(and(eq(chapters.storyId, storyId), eq(chapters.isRoot, 1)));
+    return result[0] as Chapter | undefined;
   }
 
   async getChapterPath(chapterId: number): Promise<Chapter[]> {
     const path: Chapter[] = [];
     let currentChapter = await this.getChapter(chapterId);
-
     while (currentChapter) {
       path.unshift(currentChapter);
-
-      if (!currentChapter.parentId) {
-        break;
-      }
-
+      if (!currentChapter.parentId) break;
       currentChapter = await this.getChapter(currentChapter.parentId);
     }
-
     return path;
   }
 
   async createChapter(chapterData: InsertChapter): Promise<Chapter> {
-    const id = this.chapterIdCounter++;
-
-    // Create a path string to identify this branch
-    let pathString = `${id}`;
-    if (chapterData.parentId) {
-      const parentChapter = await this.getChapter(chapterData.parentId);
-      if (parentChapter && parentChapter.path) {
-        pathString = `${parentChapter.path}-${id}`;
-      }
-    }
-
-    const chapter: Chapter = {
-      id,
+    // Zuerst wird der Chapter ohne den Pfad eingefügt
+    const [newChapter] = await this.db.insert(chapters).values({
       storyId: chapterData.storyId,
-      parentId: chapterData.parentId || null,
       title: chapterData.title,
+      parentId: chapterData.parentId || null,
       content: chapterData.content,
       summary: chapterData.summary || null,
       prompt: chapterData.prompt || null,
-      isRoot: chapterData.isRoot || null,
+      isRoot: chapterData.isRoot || 0,
       isEnding: chapterData.isEnding || 0,
-      path: pathString,
       createdAt: new Date(),
-    };
+      path: '', // Temporär, wird danach aktualisiert
+    }).returning();
 
-    this.chapters.set(id, chapter);
-    return chapter;
+    // Den Pfad anhand des Elternkapitels berechnen
+    let pathString = `${newChapter.id}`;
+    if (chapterData.parentId) {
+      const parentChapter = await this.getChapter(chapterData.parentId);
+      if (parentChapter && parentChapter.path) {
+        pathString = `${parentChapter.path}-${newChapter.id}`;
+      }
+    }
+
+    // Update des Kapitels mit dem berechneten Pfad
+    await this.db.update(chapters)
+        .set({ path: pathString })
+        .where(eq(chapters.id, newChapter.id));
+
+    const updatedChapter = await this.getChapter(newChapter.id);
+    if (!updatedChapter) throw new Error("Chapter nicht gefunden");
+    return updatedChapter;
   }
 
-  // Continuation options methods
-  async getContinuationOptions(
-    chapterId: number,
-  ): Promise<ContinuationOption[]> {
-    return Array.from(this.continuationOptions.values()).filter(
-      (option) => option.chapterId === chapterId,
-    );
+  async getNextChapterByOption(
+      parentChapterId: number,
+      optionId: number,
+  ): Promise<Chapter | undefined> {
+    const option = await this.getContinuationOption(optionId);
+    if (!option || option.chapterId !== parentChapterId) {
+      return undefined;
+    }
+    const result = await this.db
+        .select()
+        .from(chapters)
+        .where(and(eq(chapters.parentId, parentChapterId), eq(chapters.prompt, option.prompt)));
+    return result[0] as Chapter | undefined;
   }
 
-  async createContinuationOption(
-    optionData: InsertContinuationOption,
-  ): Promise<ContinuationOption> {
-    const id = this.optionIdCounter++;
-    const option: ContinuationOption = {
-      ...optionData,
-      id,
-    };
-    this.continuationOptions.set(id, option);
-    return option;
+  async getAllChapters(storyId: number): Promise<Chapter[]> {
+    const result = await this.db
+        .select()
+        .from(chapters)
+        .where(eq(chapters.storyId, storyId))
+        .orderBy(chapters.path);
+    return result as Chapter[];
   }
 
-  async getContinuationOption(
-    id: number,
-  ): Promise<ContinuationOption | undefined> {
-    return this.continuationOptions.get(id);
-  }
-
-  // Character methods
+  // Character-Methoden
   async getCharacters(storyId: number): Promise<Character[]> {
-    return Array.from(this.characters.values()).filter(
-      (character) => character.storyId === storyId,
-    );
+    const result = await this.db
+        .select()
+        .from(characters)
+        .where(eq(characters.storyId, storyId));
+    return result as Character[];
   }
 
   async getCharacter(id: number): Promise<Character | undefined> {
-    return this.characters.get(id);
+    const result = await this.db
+        .select()
+        .from(characters)
+        .where(eq(characters.id, id));
+    return result[0] as Character | undefined;
   }
 
   async createCharacter(characterData: InsertCharacter): Promise<Character> {
-    const id = this.characterIdCounter++;
-    const character: Character = {
-      id,
+    const [newCharacter] = await this.db.insert(characters).values({
       storyId: characterData.storyId,
       name: characterData.name,
       age: characterData.age || null,
       background: characterData.background || null,
       personality: characterData.personality || null,
       createdAt: new Date(),
-    };
-    this.characters.set(id, character);
-    return character;
+    }).returning();
+    return newCharacter as Character;
   }
 
-  // Neue Methoden für die Baumstruktur
-  async getNextChapterByOption(
-    parentChapterId: number,
-    optionId: number,
-  ): Promise<Chapter | undefined> {
-    // Holt die Option
-    const option = await this.getContinuationOption(optionId);
-    if (!option || option.chapterId !== parentChapterId) {
-      return undefined;
-    }
-
-    // Suche alle Kapitel, die das aktuelle Kapitel als Elternknoten haben
-    const childChapters = Array.from(this.chapters.values()).filter(
-      (chapter) => chapter.parentId === parentChapterId,
-    );
-
-    // Suche nach dem Kapitel, das mit dieser Option erstellt wurde
-    // Wir können den Prompt vergleichen, der in beiden gespeichert ist
-    return childChapters.find((chapter) => chapter.prompt === option.prompt);
+  // ContinuationOption-Methoden
+  async getContinuationOptions(chapterId: number): Promise<ContinuationOption[]> {
+    const result = await this.db
+        .select()
+        .from(continuationOptions)
+        .where(eq(continuationOptions.chapterId, chapterId));
+    return result as ContinuationOption[];
   }
 
-  async getAllChapters(storyId: number): Promise<Chapter[]> {
-    return Array.from(this.chapters.values())
-      .filter((chapter) => chapter.storyId === storyId)
-      .sort((a, b) => {
-        // Sortiere nach Pfad für eine strukturierte Darstellung
-        if (a.path && b.path) {
-          return a.path.localeCompare(b.path);
-        }
-        return a.id - b.id;
-      });
+  async createContinuationOption(optionData: InsertContinuationOption): Promise<ContinuationOption> {
+    const [newOption] = await this.db.insert(continuationOptions).values({
+      chapterId: optionData.chapterId,
+      prompt: optionData.prompt,
+      title: optionData.title,
+      preview: optionData.preview,
+    }).returning();
+    return newOption as ContinuationOption;
+  }
+
+  async getContinuationOption(id: number): Promise<ContinuationOption | undefined> {
+    const result = await this.db
+        .select()
+        .from(continuationOptions)
+        .where(eq(continuationOptions.id, id));
+    return result[0] as ContinuationOption | undefined;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DrizzleStorage();

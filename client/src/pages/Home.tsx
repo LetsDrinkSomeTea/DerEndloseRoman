@@ -43,7 +43,7 @@ export default function Home() {
       <header className="bg-primary text-white shadow-md">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">GeschichtenWelt</h1>
+            <h1 className="text-2xl font-bold">Der endlose Roman</h1>
             <Button
               onClick={() => setCreateModalOpen(true)}
               className="bg-secondary hover:bg-secondary-900 text-black"

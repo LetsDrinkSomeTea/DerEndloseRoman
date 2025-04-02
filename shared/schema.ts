@@ -3,11 +3,7 @@ import {
   text,
   serial,
   integer,
-  varchar,
   timestamp,
-  foreignKey,
-  primaryKey,
-  doublePrecision,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -29,7 +25,7 @@ export const stories = pgTable("stories", {
 // Chapter model
 export const chapters = pgTable("chapters", {
   id: serial("id").primaryKey(),
-  storyId: integer("story_id").notNull(),
+  storyId: integer("story_id").notNull().references(() => stories.id),
   parentId: integer("parent_id"),
   title: text("title").notNull(),
   content: text("content").notNull(),
@@ -44,7 +40,7 @@ export const chapters = pgTable("chapters", {
 // Character model
 export const characters = pgTable("characters", {
   id: serial("id").primaryKey(),
-  storyId: integer("story_id").notNull(),
+  storyId: integer("story_id").notNull().references(() => stories.id),
   name: text("name").notNull(),
   age: text("age"),
   background: text("background"),
@@ -55,7 +51,7 @@ export const characters = pgTable("characters", {
 // Continuation options model
 export const continuationOptions = pgTable("continuation_options", {
   id: serial("id").primaryKey(),
-  chapterId: integer("chapter_id").notNull(),
+  chapterId: integer("chapter_id").notNull().references(() => chapters.id),
   title: text("title").notNull(),
   preview: text("preview").notNull(),
   prompt: text("prompt").notNull(),
