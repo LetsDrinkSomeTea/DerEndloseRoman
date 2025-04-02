@@ -20,3 +20,5 @@ Um die Entwicklungsumgebung für dieses Projekt einzurichten, folgen Sie diesen 
    ```bash
    docker compose up [-d]
    ```
+
+Die Anwendung ist dann erreichbar unter [http://localhost:5001](http://localhost:5001)
