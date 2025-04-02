@@ -119,18 +119,21 @@ export async function generateChapter(
 
   if (customPrompt) {
     prompt += `\nBitte berücksichtige folgende Anweisung für das neue Kapitel: ${customPrompt}\n`;
+  } else {
+    prompt += `\nDas ist das erste Kapitel, stelle die Charaktere vor und leite die Geschichte ein.`
   }
 
   prompt += `\nDas Kapitel sollte ${safeDetails.chapterLength} Wörter umfassen.`;
   prompt += `\nDu kannst selbst entscheiden, ob dieses Kapitel ein Geschichtsende sein soll. Wenn du dich für ein Ende entscheidest, setze "isEnding" auf true und generiere keine Fortsetzungsoptionen.`;
   prompt += `\nWenn es kein Ende ist, generiere 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.`;
   prompt += `\nErzähle die Geschichte ansprechend und berücksichtige alle Charaktere und die Zusammenfassung.`;
+  prompt += `\nWenn du neue Charaktere einführst, stelle sie entsprechend vor.`
 
   prompt += `\nFormat: Antworte bitte mit einem JSON Objekt im folgenden Format:
   {
     "title": "Kapiteltitel (Nur der Titel des Kapitels, keine Nummer oder ähnliches)",
     "content": "Der Kapitelinhalt (${safeDetails.chapterLength} Wörter)",
-    "summary": "Eine Zusammenfassung der gesamten Geschichte bis zu diesem Punkt (60-80 Wörter)",
+    "summary": "Eine Zusammenfassung der gesamten Geschichte bis zu diesem Punkt, inklusive der wichtigsten Handlungen und aller Charaktere.",
     "isEnding": false,
     "continuationOptions": [
       {
