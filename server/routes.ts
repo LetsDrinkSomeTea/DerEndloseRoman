@@ -276,6 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parentId: currentChapter.parentId,
         characters: characters,
         previousSummary: currentChapter.summary || undefined,
+        currentPath: currentChapter.path, // Add path information for depth calculation
       };
 
       const chapterData = await generateChapter(

@@ -30,6 +30,49 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+/**
+ * Calculate chapter depth from path string (e.g., "1-2-3" = depth 3)
+ */
+function getChapterDepth(path?: string | null): number {
+  if (!path) return 1;
+  return path.split('-').length;
+}
+
+/**
+ * Determine story arc phase based on chapter depth
+ */
+function getStoryArcPhase(depth: number): {
+  phase: 'beginning' | 'development' | 'climax' | 'resolution';
+  description: string;
+  endingProbability: number;
+} {
+  if (depth <= 2) {
+    return {
+      phase: 'beginning',
+      description: 'Einführung der Charaktere und der Grundsituation',
+      endingProbability: 0.05, // 5% chance
+    };
+  } else if (depth <= 5) {
+    return {
+      phase: 'development',
+      description: 'Entwicklung der Handlung und Charakterentwicklung',
+      endingProbability: 0.15, // 15% chance
+    };
+  } else if (depth <= 8) {
+    return {
+      phase: 'climax',
+      description: 'Höhepunkt der Geschichte, wichtige Entscheidungen und Wendungen',
+      endingProbability: 0.35, // 35% chance
+    };
+  } else {
+    return {
+      phase: 'resolution',
+      description: 'Auflösung der Geschichte, Zeit für ein befriedigendes Ende',
+      endingProbability: 0.60, // 60% chance
+    };
+  }
+}
+
 export interface StoryDetails {
   title?: string | null;
   genre?: string | null;
@@ -66,6 +109,7 @@ export interface ChapterContext {
   parentId?: number | null;
   characters?: any[]; // Verwende any[], um Typkonflikte zu vermeiden
   previousSummary?: string | null;
+  currentPath?: string | null; // Add path information for depth calculation
 }
 
 export async function generateChapter(
@@ -80,6 +124,10 @@ export async function generateChapter(
     temperature: details.temperature ?? 5,
   };
 
+  // Calculate chapter depth and story arc information
+  const chapterDepth = getChapterDepth(chapterContext?.currentPath);
+  const storyArc = getStoryArcPhase(chapterDepth);
+
   // Building the base prompt
   let prompt = `Generiere ein Kapitel für eine deutsche Geschichte mit folgenden Details:\n`;
 
@@ -93,63 +141,95 @@ export async function generateChapter(
   if (details.mainCharacter)
     prompt += `Hauptcharakter: ${details.mainCharacter}\n`;
 
-  // Füge Charakterinformationen hinzu, wenn verfügbar
+  // Add story progression information
+  prompt += `\nSTORY PROGRESSION:\n`;
+  prompt += `Aktuelles Kapitel: ${chapterDepth}\n`;
+  prompt += `Aktuelle Erzählphase: ${storyArc.phase} (${storyArc.description})\n`;
+  prompt += `Wahrscheinlichkeit für Geschichtsende: ${Math.round(storyArc.endingProbability * 100)}%\n`;
+
+  // Enhanced character continuity section
   if (chapterContext?.characters && chapterContext.characters.length > 0) {
-    prompt += `\nCharaktere in der Geschichte:\n`;
+    prompt += `\nCHARAKTERE (Bitte konsistent verwenden!):\n`;
     chapterContext.characters.forEach((character, index) => {
-      prompt += `Character ${index + 1}: ${character.name}`;
-      if (character.age) prompt += `, ${character.age} Jahre alt`;
+      prompt += `${index + 1}. ${character.name}`;
+      if (character.age) prompt += ` (${character.age} Jahre)`;
       if (character.personality)
-        prompt += `, Persönlichkeit: ${character.personality}`;
+        prompt += `\n   Persönlichkeit: ${character.personality}`;
       if (character.background)
-        prompt += `, Hintergrund: ${character.background}`;
+        prompt += `\n   Hintergrund: ${character.background}`;
       prompt += `\n`;
     });
+    prompt += `\nWICHTIG: Alle bereits eingeführten Charaktere sollen konsistent dargestellt werden. Vermeide Widersprüche zu ihren etablierten Eigenschaften.\n`;
   }
 
-  // Vorheriges Kapitel und Zusammenfassung
+  // Enhanced story context section
   if (chapterContext) {
-    prompt += `\nVorheriges Kapitel Titel: ${chapterContext.title}\n`;
-    prompt += `Vorheriges Kapitel Inhalt: ${chapterContext.content}\n`;
+    prompt += `\nVORHERIGES KAPITEL:\n`;
+    prompt += `Titel: "${chapterContext.title}"\n`;
+    prompt += `Inhalt: ${chapterContext.content}\n`;
 
     if (chapterContext.previousSummary) {
-      prompt += `\nZusammenfassung der bisherigen Geschichte: ${chapterContext.previousSummary}\n`;
+      prompt += `\nBISHERIGE HANDLUNG:\n${chapterContext.previousSummary}\n`;
+      prompt += `\nKONTINUITÄT: Baue nahtlos auf der bisherigen Handlung auf. Berücksichtige alle etablierten Handlungsstränge und Charakterbeziehungen.\n`;
     }
   }
 
+  // Custom prompt or default chapter instructions
   if (customPrompt) {
-    prompt += `\nBitte berücksichtige folgende Anweisung für das neue Kapitel: ${customPrompt}\n`;
+    prompt += `\nSPEZIELLE ANWEISUNG: ${customPrompt}\n`;
+  } else if (!chapterContext) {
+    prompt += `\nDas ist das erste Kapitel. Führe die Charaktere ein und etabliere die Grundsituation der Geschichte.\n`;
   } else {
-    prompt += `\nDas ist das erste Kapitel, stelle die Charaktere vor und leite die Geschichte ein.`
+    prompt += `\nFühre die Geschichte organisch fort und entwickle die Handlung entsprechend der aktuellen Erzählphase.\n`;
   }
 
-  prompt += `\nDas Kapitel sollte ${safeDetails.chapterLength} Wörter umfassen.`;
-  prompt += `\nDu kannst selbst entscheiden, ob dieses Kapitel ein Geschichtsende sein soll. Wenn du dich für ein Ende entscheidest, setze "isEnding" auf true und generiere keine Fortsetzungsoptionen.`;
-  prompt += `\nWenn es kein Ende ist, generiere 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.`;
-  prompt += `\nErzähle die Geschichte ansprechend und berücksichtige alle Charaktere und die Zusammenfassung.`;
-  prompt += `\nWenn du neue Charaktere einführst, stelle sie entsprechend vor.`
+  prompt += `\nDas Kapitel sollte ${safeDetails.chapterLength} Wörter umfassen.\n`;
+  // Enhanced ending decision logic based on story progression
+  prompt += `\nGESCHICHTSENDE-ENTSCHEIDUNG:\n`;
+  if (storyArc.phase === 'beginning') {
+    prompt += `Da dies noch der Anfang der Geschichte ist, sollte das Kapitel NICHT enden. Entwickle die Handlung weiter.\n`;
+  } else if (storyArc.phase === 'development') {
+    prompt += `Die Geschichte ist in der Entwicklungsphase. Ein Ende ist möglich, aber die Handlung sollte noch weiterentwickelt werden.\n`;
+  } else if (storyArc.phase === 'climax') {
+    prompt += `Die Geschichte nähert sich dem Höhepunkt. Überlege, ob wichtige Konflikte gelöst werden können und ein befriedigendes Ende möglich ist.\n`;
+  } else {
+    prompt += `Die Geschichte ist reif für ein Ende. Bringe die Handlungsstränge zu einem befriedigenden Abschluss, wenn es narrativ sinnvoll ist.\n`;
+  }
+  
+  prompt += `Wenn du dich für ein Ende entscheidest, setze "isEnding" auf true und generiere keine Fortsetzungsoptionen.\n`;
+  prompt += `Wenn es kein Ende ist, generiere 3 mögliche Fortsetzungsoptionen für das nächste Kapitel.\n`;
+
+  // Enhanced storytelling instructions
+  prompt += `\nERZÄHLRICHTLINIEN:\n`;
+  prompt += `• Erzähle die Geschichte ansprechend und atmosphärisch\n`;
+  prompt += `• Berücksichtige ALLE etablierten Charaktere und ihre Eigenschaften\n`;
+  prompt += `• Baue auf der bisherigen Handlung auf - keine Widersprüche\n`;
+  prompt += `• Entwickle die Charaktere weiter und zeige ihre Persönlichkeiten\n`;
+  prompt += `• Wenn neue Charaktere eingeführt werden, stelle sie detailliert vor\n`;
+  prompt += `• Achte auf emotionale Tiefe und nachvollziehbare Motivationen\n`;
+  prompt += `• Schaffe eine kohärente Atmosphäre, die zum Genre und Setting passt\n`;
 
   prompt += `\nFormat: Antworte bitte mit einem JSON Objekt im folgenden Format:
   {
     "title": "Kapiteltitel (Nur der Titel des Kapitels, keine Nummer oder ähnliches)",
     "content": "Der Kapitelinhalt (${safeDetails.chapterLength} Wörter)",
-    "summary": "Eine Zusammenfassung der gesamten Geschichte bis zu diesem Punkt, inklusive der wichtigsten Handlungen und aller Charaktere.",
+    "summary": "Eine präzise Zusammenfassung der GESAMTEN Geschichte bis zu diesem Punkt, inklusive aller wichtigen Handlungen, Charakterentwicklungen und aktuellen Situationen. Erwähne alle relevanten Charaktere und ihre aktuellen Zustände.",
     "isEnding": false,
     "continuationOptions": [
       {
         "title": "Titel der ersten Option",
         "preview": "Kurze Vorschau (etwa 10-15 Wörter)",
-        "prompt": "Detaillierter Prompt für diese Fortsetzung"
+        "prompt": "Detaillierter Prompt für diese Fortsetzung, der die Handlung organisch weiterentwickelt"
       },
       {
         "title": "Titel der zweiten Option",
         "preview": "Kurze Vorschau (etwa 10-15 Wörter)",
-        "prompt": "Detaillierter Prompt für diese Fortsetzung"
+        "prompt": "Detaillierter Prompt für diese Fortsetzung, der eine alternative Entwicklung ermöglicht"
       },
       {
         "title": "Titel der dritten Option",
         "preview": "Kurze Vorschau (etwa 10-15 Wörter)",
-        "prompt": "Detaillierter Prompt für diese Fortsetzung"
+        "prompt": "Detaillierter Prompt für diese Fortsetzung, der einen anderen Aspekt der Geschichte beleuchtet"
       }
     ]
   }
@@ -158,7 +238,7 @@ export async function generateChapter(
   {
     "title": "Kapiteltitel",
     "content": "Der Kapitelinhalt, der die Geschichte zu einem befriedigenden Abschluss bringt (${safeDetails.chapterLength} Wörter)",
-    "summary": "Eine abschließende Zusammenfassung der gesamten Geschichte (60-80 Wörter)",
+    "summary": "Eine abschließende Zusammenfassung der gesamten Geschichte mit allen wichtigen Ereignissen und Charakterentwicklungen (80-100 Wörter)",
     "isEnding": true,
     "continuationOptions": []
   }`;
